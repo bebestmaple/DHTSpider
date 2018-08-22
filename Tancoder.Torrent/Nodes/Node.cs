@@ -30,13 +30,11 @@
 
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
-
-using Tancoder.Torrent.BEncoding;
 using System.Net;
-using Tancoder.Torrent.Dht.Messages;
 using System.Text;
+using Tancoder.Torrent.BEncoding;
+using Tancoder.Torrent.Dht.Messages;
 
 namespace Tancoder.Torrent.Dht
 {

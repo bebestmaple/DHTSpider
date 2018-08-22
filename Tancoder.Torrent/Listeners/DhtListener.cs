@@ -1,10 +1,5 @@
 ﻿#if !DISABLE_DHT
-using System;
-using System.Collections.Generic;
-using System.Text;
-using Tancoder.Torrent.Client;
 using System.Net;
-using Tancoder.Torrent.Common;
 
 namespace Tancoder.Torrent.Dht.Listeners
 {

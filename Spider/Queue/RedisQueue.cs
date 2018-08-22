@@ -1,32 +1,41 @@
-﻿using System;
+﻿using Spider.Helper;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
-using System.Text;
-using System.Threading.Tasks;
 using Tancoder.Torrent;
 
 namespace Spider.Queue
 {
     public class RedisQueue : IQueue
     {
-        //TODO
+        private const string RedisQueueKey = "RedisQueueKey";
+
         public RedisQueue()
         {
+
         }
-        public KeyValuePair<InfoHash, IPEndPoint> Dequeue()
+
+
+        public  KeyValuePair<InfoHash, IPEndPoint> Dequeue()
         {
-            throw new NotImplementedException();
+            return RedisHelper.Instance.ListLeftPop<KeyValuePair<InfoHash, IPEndPoint>>(RedisQueueKey);
         }
+
+       
 
         public void Enqueue(KeyValuePair<InfoHash, IPEndPoint> item)
         {
-            throw new NotImplementedException();
+            RedisHelper.Instance.ListRightPush<KeyValuePair<InfoHash, IPEndPoint>>(RedisQueueKey,item);
         }
+
 
         public int Count()
         {
-            return 0;
+            return (int)RedisHelper.Instance.ListLength(RedisQueueKey);
         }
+        
+
+        
+
+
     }
 }

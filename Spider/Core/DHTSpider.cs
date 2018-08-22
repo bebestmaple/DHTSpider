@@ -26,14 +26,33 @@ namespace Spider.Core
             MessageQueue = new ConcurrentQueue<KeyValuePair<IPEndPoint, byte[]>>();
         }
 
+        /// <summary>
+        /// 初始DHT网络节点
+        /// </summary>
         private static List<IPEndPoint> BOOTSTRAP_NODES = new List<IPEndPoint>() {
             new IPEndPoint(Dns.GetHostEntry("router.bittorrent.com").AddressList[0], 6881),
-            new IPEndPoint(Dns.GetHostEntry("dht.transmissionbt.com").AddressList[0], 6881)
+            new IPEndPoint(Dns.GetHostEntry("dht.transmissionbt.com").AddressList[0], 6881),
+            new IPEndPoint(Dns.GetHostEntry("router.utorrent.com").AddressList[0], 6881),
         };
 
-        private static int MaxNodesSize = 1000;
+        /// <summary>
+        /// UDP监听
+        /// </summary>
+        private UdpSocketListener udpSocketListener;
 
+        /// <summary>
+        /// 最大保存节点数
+        /// </summary>
+        private static int MaxNodesSize = int.MaxValue;
+
+        /// <summary>
+        /// 消息队列
+        /// </summary>
         public ConcurrentQueue<KeyValuePair<IPEndPoint, byte[]>> MessageQueue;
+
+        /// <summary>
+        /// 同步锁
+        /// </summary>
         private object locker = new object();
         public IMetaDataFilter Filter { get; set; }
         public IQueue Queue { get; set; }
@@ -44,6 +63,10 @@ namespace Spider.Core
 
         public ConcurrentDictionary<string, Node> KTable;
 
+        public event NewMetadataEvent NewMetadata;
+
+
+        #region IDisposable
         private bool disposed = false;
         public bool Disposed
         {
@@ -52,14 +75,27 @@ namespace Spider.Core
                 return disposed;
             }
         }
+        public void Dispose()
+        {
+            if (disposed)
+                return;
+        } 
+        #endregion
 
-        public event NewMetadataEvent NewMetadata;
-
+        #region 添加节点
+        /// <summary>
+        /// 添加节点
+        /// </summary>
+        /// <param name="nodes"></param>
         public void Add(BEncodedList nodes)
         {
             Add(Node.FromCompactNode(nodes));
         }
 
+        /// <summary>
+        /// 添加节点
+        /// </summary>
+        /// <param name="nodes"></param>
         public void Add(IEnumerable<Node> nodes)
         {
             foreach (var node in nodes)
@@ -68,6 +104,10 @@ namespace Spider.Core
             }
         }
 
+        /// <summary>
+        /// 添加节点
+        /// </summary>
+        /// <param name="node"></param>
         public void Add(Node node)
         {
             if (KTable.Count >= MaxNodesSize)
@@ -79,7 +119,14 @@ namespace Spider.Core
                 KTable.TryAdd(node.Id.ToString(), node);
             }
         }
+        #endregion
 
+        #region 查找节点
+        /// <summary>
+        /// 查找节点
+        /// </summary>
+        /// <param name="nid">节点ID</param>
+        /// <returns></returns>
         public Node FindNode(NodeId nid)
         {
             var node = new Node(NodeId.Create(), LocalAddress);
@@ -88,14 +135,9 @@ namespace Spider.Core
                 return node;
             }
             return null;
-        }
-
-        public void Dispose()
-        {
-            if (disposed)
-                return;
-        }
-
+        } 
+        #endregion
+       
         public void GetAnnounced(InfoHash infohash, IPEndPoint endpoint)
         {
             try
@@ -119,6 +161,7 @@ namespace Spider.Core
 
         public void GetPeers(InfoHash infohash)
         {
+
         }
 
         public FindPeersResult QueryFindNode(NodeId target)
@@ -145,6 +188,7 @@ namespace Spider.Core
             };
             return result;
         }
+
         public List<Node> GetClosestFromKTable(NodeId target)
         {
             SortedList<NodeId, Node> sortedNodes = new SortedList<NodeId, Node>(8);
@@ -163,6 +207,11 @@ namespace Spider.Core
             return new List<Node>(sortedNodes.Values);
         }
 
+        /// <summary>
+        /// 发送消息
+        /// </summary>
+        /// <param name="msg">消息体</param>
+        /// <param name="endpoint">目标IP</param>
         public void Send(DhtMessage msg, IPEndPoint endpoint)
         {
             if (msg.TransactionId == null)
@@ -178,6 +227,9 @@ namespace Spider.Core
             udpSocketListener.Send(buffer, endpoint);
         }
 
+        /// <summary>
+        /// 开始
+        /// </summary>
         public void Start()
         {
             udpSocketListener.Start();
@@ -207,18 +259,28 @@ namespace Spider.Core
             }
 
         }
+
+        /// <summary>
+        /// 停止
+        /// </summary>
         public void Stop()
         {
             udpSocketListener.Stop();
         }
 
+        #region 向初始DHT节点发送消息，以将本节点加入DHT网络
+        /// <summary>
+        /// 向初始DHT节点发送消息，以将本节点加入DHT网络
+        /// </summary>
         private void JoinDHTNetwork()
         {
             foreach (var item in BOOTSTRAP_NODES)
             {
                 SendFindNodeRequest(item);
             }
-        }
+        } 
+        #endregion
+        
         private void MakeNeighbours()
         {
             foreach (var item in KTable)
@@ -242,14 +304,13 @@ namespace Spider.Core
             }
         }
 
-        private UdpSocketListener udpSocketListener;
+        
 
         private void OnMessageReceived(byte[] buffer, IPEndPoint endpoint)
         {
             try
             {
                 MessageQueue.Enqueue(new KeyValuePair<IPEndPoint, byte[]>(endpoint, buffer));
-
             }
             catch (Exception ex)
             {
@@ -271,10 +332,11 @@ namespace Spider.Core
                 }
                 else
                 {
-                    Thread.Sleep(1000);
+                    Thread.Sleep(500);
                 }
             }
         }
+
         private void ProcessMessage(byte[] buffer, IPEndPoint endpoint)
         {
             try
@@ -287,19 +349,12 @@ namespace Spider.Core
                     {
                         message.Handle(this, new Node(message.Id, endpoint));
                     }
-
-                    //var node = new Node(message.Id, endpoint);
-                    //if (!KTable.TryGetValue(message.Id.ToString(), out node))
-                    //{
-                    //    Add(new Node(message.Id, endpoint));
-                    //}
-                    //node.Seen();
-                    //message.Handle(this, node);
                 }
             }
-            catch { }
+            catch(Exception ex)
+            {
+                Logger.Fatal($"ProcessMessage {ex}");
+            }
         }
-
-
     }
 }

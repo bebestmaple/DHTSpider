@@ -28,11 +28,10 @@
 //
 
 
-using System;
 
 namespace Tancoder.Torrent.Dht
 {
-	public enum NodeState
+    public enum NodeState
 	{
 		Unknown,
 		Good,

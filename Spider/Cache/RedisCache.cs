@@ -1,15 +1,10 @@
-﻿using Spider.Helper;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System;
 
 namespace Spider.Cache
 {
     public class RedisCache : ICache
     {
-        //TODO
+        
         public RedisCache()
         {
         }

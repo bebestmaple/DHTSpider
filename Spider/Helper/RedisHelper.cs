@@ -5,13 +5,12 @@ using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Spider.Helper
 {
     /// <summary>
-    /// Redis 助手
+    /// Redis帮助类
     /// </summary>
     public class RedisHelper
     {

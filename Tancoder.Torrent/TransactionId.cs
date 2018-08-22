@@ -1,7 +1,4 @@
 #if !DISABLE_DHT
-using System;
-using System.Collections.Generic;
-using System.Text;
 using Tancoder.Torrent.BEncoding;
 
 namespace Tancoder.Torrent.Dht

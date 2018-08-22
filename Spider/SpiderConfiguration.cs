@@ -7,9 +7,7 @@ using Spider.Store;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Tancoder.Torrent;
@@ -25,7 +23,7 @@ namespace Spider
 
         private static readonly object obj = new object();
         private static SpiderConfiguration _instance = null;
-
+        
         public SpiderSetting _option { get; set; }
         public ICache _cache { get; set; }
         public IQueue _queue { get; set; }
@@ -61,36 +59,60 @@ namespace Spider
             return _instance;
         }
 
+        /// <summary>
+        /// 使用默认内存缓存
+        /// </summary>
+        /// <returns></returns>
         public SpiderConfiguration UseDefaultCache()
         {
             _builder.RegisterType<DefaultCache>().As<ICache>().Named<ICache>("Cache").SingleInstance();
             return _instance;
         }
 
+        /// <summary>
+        /// 使用Redis缓存
+        /// </summary>
+        /// <returns></returns>
         public SpiderConfiguration UseRedisCache()
         {
             _builder.RegisterType<RedisCache>().As<ICache>().Named<ICache>("Cache").SingleInstance();
             return _instance;
         }
 
+        /// <summary>
+        /// 使用默认内存队列
+        /// </summary>
+        /// <returns></returns>
         public SpiderConfiguration UseDefaultQueue()
         {
             _builder.RegisterType<DefaultQueue>().As<IQueue>().Named<IQueue>("Queue").SingleInstance();
             return _instance;
         }
 
+        /// <summary>
+        /// 使用Redis队列
+        /// </summary>
+        /// <returns></returns>
         public SpiderConfiguration UseRedisQueue()
         {
             _builder.RegisterType<RedisQueue>().As<IQueue>().Named<IQueue>("Queue").SingleInstance();
             return _instance;
         }
 
+        /// <summary>
+        /// 使用ElasticSearch存储
+        /// </summary>
+        /// <returns></returns>
         public SpiderConfiguration UseElasticSearchStore()
         {
             _builder.RegisterType<ElasticSearchStore>().As<IStore>().Named<IStore>("Store").SingleInstance();
             return _instance;
         }
 
+        /// <summary>
+        /// 使用MongoDB存储
+        /// </summary>
+        /// <returns></returns>
         public SpiderConfiguration UseMongoDBStore()
         {
             _builder.RegisterType<MongoDBStore>().As<IStore>().Named<IStore>("Store").SingleInstance();
@@ -105,28 +127,33 @@ namespace Spider
         public SpiderConfiguration Start()
         {
             _container = _builder.Build();
-            if (!_container.IsRegisteredWithName<ICache>("Cache"))
+            if (_container.IsRegisteredWithName<ICache>("Cache"))
             {
-                throw new Exception("没有注册Cache");
+                this.UseDefaultCache();
+                _cache = _container.ResolveNamed<ICache>("Cache");
             }
-            if (!_container.IsRegisteredWithName<IQueue>("Queue"))
-            {
-                throw new Exception("没有注册Queue");
-            }
-            //if (!_container.IsRegisteredWithName<IStore>("Store"))
-            //{
-            //    throw new Exception("没有注册Store");
-            //}
+            
 
-            _queue = _container.ResolveNamed<IQueue>("Queue");
-            _cache = _container.ResolveNamed<ICache>("Cache");
-            //_store = _container.ResolveNamed<IStore>("Store");
+
+            if (_container.IsRegisteredWithName<IQueue>("Queue"))
+            {
+                this.UseDefaultQueue();
+               _queue = _container.ResolveNamed<IQueue>("Queue");
+            }
+
+
+            if (_container.IsRegisteredWithName<IStore>("Store"))
+            {
+                _store = _container.ResolveNamed<IStore>("Store");
+            }
 
 
             for (var i = 0; i < _option.MaxSpiderThreadCount; i++)
             {
                 var port = _option.LocalPort + i;
-                Logger.ConsoleWrite($"线程：{i + 1} 端口：{port} 已启动监听...");
+                WriteLog($"线程：{i + 1} 端口：{port} 已启动监听...");
+                
+
                 Task.Run(() =>
                 {
                     var spider = new DHTSpider(new IPEndPoint(IPAddress.Parse("0.0.0.0"), port), _queue);
@@ -139,7 +166,7 @@ namespace Spider
             for (var i = 0; i < _option.MaxDownLoadThreadCount; i++)
             {
                 var id = i + 1;
-                Logger.ConsoleWrite($"线程[{id}]开始下载");
+                WriteLog($"线程[{id}]开始下载");
                 Task.Run(() =>
                 {
                     Download(id);
@@ -151,18 +178,18 @@ namespace Spider
             return _instance;
         }
 
-
-
         private void DHTSpider_NewMetadata(object sender, NewMetadataEventArgs e)
         {
             var hash = e.Metadata.ToString();
             lock (obj)
             {
-                if (!_cache.ContainsKey(hash))
+                if (_cache != null && !_cache.ContainsKey(hash))
                 {
                     _cache.Set(hash, e.Owner);
                     _queue.Enqueue(new KeyValuePair<InfoHash, IPEndPoint>(e.Metadata, e.Owner));
-                    Logger.ConsoleWrite($"NewMetadata    Hash:{e.Metadata}  Address:{e.Owner.ToString()}");
+
+
+                    WriteLog($"NewMetadata    Hash:{e.Metadata}  Address:{e.Owner.ToString()}");
                 }
             }
 
@@ -174,20 +201,20 @@ namespace Spider
             {
                 try
                 {
-                    var info = new KeyValuePair<InfoHash, IPEndPoint>();
+                    KeyValuePair<InfoHash, IPEndPoint>? info = new KeyValuePair<InfoHash, IPEndPoint>();
                     lock (this)
                     {
-                        info = _queue.Dequeue();
+                        info = _queue?.Dequeue();
                     }
-                    if (info.Key == null || info.Value == null)
+                    if (!info.HasValue || info.Value.Key == null || info.Value.Value == null)
                     {
-                        Thread.Sleep(1000);
+                        Thread.Sleep(500);
                         continue;
                     }
-                    var hash = BitConverter.ToString(info.Key.Hash).Replace("-", "");
-                    using (WireClient client = new WireClient(info.Value))
+                    var hash = BitConverter.ToString(info.Value.Key.Hash).Replace("-", "");
+                    using (WireClient client = new WireClient(info.Value.Value))
                     {
-                        var metadata = client.GetMetaData(info.Key);
+                        var metadata = client.GetMetaData(info.Value.Key);
                         if (metadata != null)
                         {
                             var name = ((BEncodedString)metadata["name"]).Text;
@@ -203,13 +230,18 @@ namespace Spider
                 }
                 catch (Exception ex)
                 {
-                    //Logger.Error($"Download {ex.Message}");
-                }
-                finally
-                {
-                    Thread.Sleep(1000);
+                    Logger.Error($"Download {ex.Message}");
                 }
             }
         }
+
+        private void WriteLog(string msg, ConsoleColor consoleColor = ConsoleColor.Green)
+        {
+            if (_option.IsWriteToConsole)
+            {
+                Logger.ConsoleWrite(msg, consoleColor);
+            }
+        }
+        
     }
 }

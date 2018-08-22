@@ -29,14 +29,10 @@
 
 
 using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Net.Sockets;
 using System.Net;
-using Tancoder.Torrent.BEncoding;
+using System.Net.Sockets;
 using Tancoder.Torrent.Client;
 using Tancoder.Torrent.Common;
-using System.Diagnostics;
 
 namespace Tancoder.Torrent
 {
@@ -61,45 +57,8 @@ namespace Tancoder.Torrent
                 OnMessageReceived(buffer, e);
                 client.BeginReceive(EndReceive, null);
             }
-            //catch (ObjectDisposedException ex)
-            //{
-            //    // Ignore, we're finished!
-            //    throw new Exception($"UdpListener ObjectDisposedException: {ex}");
-            //}
             catch (SocketException ex)
             {
-                // If the destination computer closes the connection
-                // we get error code 10054. We need to keep receiving on
-                // the socket until we clear all the error states
-                //if (ex.ErrorCode == 10054)
-                //{
-                //    while (true)
-                //    {
-                //        try
-                //        {
-                //            client.BeginReceive(EndReceive, null);
-                //            return;
-                //        }
-                //        //catch (ObjectDisposedException oe)
-                //        //{
-                //        //    throw new Exception($"UdpListener ObjectDisposedException: {oe}");
-                //        //}
-                //        catch (SocketException e)
-                //        {
-                //            throw new Exception($"UdpListener SocketException: {e}");
-                //            //if (e.ErrorCode != 10054)
-                //            //    return;
-                //        }
-                //    }
-                //}
-                ////else if (ex.ErrorCode == 10052)
-                ////{
-
-                ////}
-                //else
-                //{
-                //    throw new Exception($"UdpListener SocketException: {ex}");
-                //}
                 client.BeginReceive(EndReceive, null);
             }
             catch (Exception ex)

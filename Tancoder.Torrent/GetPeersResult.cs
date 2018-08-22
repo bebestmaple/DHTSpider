@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using Tancoder.Torrent.BEncoding;
 using Tancoder.Torrent.Dht;
 
 namespace Tancoder.Torrent

@@ -28,13 +28,8 @@
 //
 
 
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Net;
 
 using Tancoder.Torrent.BEncoding;
-using Tancoder.Torrent.Dht;
 
 
 namespace Tancoder.Torrent.Dht.Messages

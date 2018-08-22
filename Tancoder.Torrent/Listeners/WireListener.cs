@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Tancoder.Torrent.BEncoding;
@@ -24,7 +22,6 @@ namespace Tancoder.Torrent.Client
 
         public WireClient(IPEndPoint endpoint)
         {
-            //client = new TcpClient(new IPEndPoint(IPAddress.Any, 60000))
             client = new TcpClient()
             {
                 SendTimeout = 5000,

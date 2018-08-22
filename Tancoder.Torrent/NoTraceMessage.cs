@@ -1,5 +1,4 @@
-﻿using System;
-using Tancoder.Torrent.BEncoding;
+﻿using Tancoder.Torrent.BEncoding;
 
 namespace Tancoder.Torrent.Dht.Messages
 {

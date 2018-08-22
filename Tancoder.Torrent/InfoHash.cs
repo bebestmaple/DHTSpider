@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Tancoder.Torrent.Common;
-using System.Web;
 
 namespace Tancoder.Torrent
 {

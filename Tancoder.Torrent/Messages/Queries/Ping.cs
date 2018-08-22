@@ -28,12 +28,8 @@
 //
 
 
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 using Tancoder.Torrent.BEncoding;
-using System.Net;
 
 namespace Tancoder.Torrent.Dht.Messages
 {
@@ -57,8 +53,7 @@ namespace Tancoder.Torrent.Dht.Messages
         public override void Handle(IDhtEngine engine, Node node)
         {
             base.Handle(engine, node);
-
-            //PingResponse m = new PingResponse(engine.GetNeighborId(Id), TransactionId);
+            
             PingResponse m = new PingResponse(engine.LocalId, TransactionId);
             engine.Send(m, node.EndPoint);
         }

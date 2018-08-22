@@ -29,11 +29,9 @@
 
 
 using System;
-using System.IO;
-using System.Collections;
 using System.Text;
-using Tancoder.Torrent.Common;
 using Tancoder.Torrent.Client.Messages;
+using Tancoder.Torrent.Common;
 
 namespace Tancoder.Torrent.BEncoding
 {

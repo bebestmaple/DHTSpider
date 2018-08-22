@@ -29,15 +29,13 @@
 
 
 using System;
-using System.Collections;
-using System.Text;
 using System.Collections.Generic;
 using System.Threading;
 //using Tancoder.Torrent.Client.Encryption;
 
 namespace Tancoder.Torrent.Common
 {
-	public delegate long Operation<T>(T target);
+    public delegate long Operation<T>(T target);
 
     public static class Toolbox
     {

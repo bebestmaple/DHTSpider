@@ -30,7 +30,6 @@
 
 using System;
 using System.IO;
-using System.Text;
 
 namespace Tancoder.Torrent.BEncoding
 {

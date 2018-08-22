@@ -28,11 +28,6 @@
 //
 
 using System;
-using System.IO;
-using System.Security.Cryptography;
-using System.Collections.Generic;
-
-using Tancoder.Torrent.BEncoding;
 
 namespace Tancoder.Torrent.Dht
 {

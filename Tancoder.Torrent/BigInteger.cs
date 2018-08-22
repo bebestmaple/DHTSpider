@@ -37,7 +37,6 @@
 //
 
 using System;
-using System.Security.Cryptography;
 
 namespace Tancoder.Torrent.Dht
 {

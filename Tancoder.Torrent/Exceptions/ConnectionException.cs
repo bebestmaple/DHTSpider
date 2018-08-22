@@ -28,7 +28,6 @@
 
 
 using System;
-using System.Text;
 using Tancoder.Torrent.Common;
 
 namespace Tancoder.Torrent.Client

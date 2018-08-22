@@ -1,11 +1,7 @@
 ﻿using Spider.Log;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Spider.Core
 {
@@ -14,31 +10,48 @@ namespace Spider.Core
     public class UdpSocketListener
     {
         private IPEndPoint endpoint;
+
+        /// <summary>
+        /// 监听IP地址
+        /// </summary>
         public IPEndPoint Endpoint
         {
             get { return endpoint; }
         }
 
+        /// <summary>
+        /// 监听Socket
+        /// </summary>
         private Socket m_ListenSocket;
 
         private SocketAsyncEventArgs m_ReceiveSAE;
 
+        #region 构造函数
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="endpoint"></param>
         public UdpSocketListener(IPEndPoint endpoint)
         {
             this.endpoint = endpoint;
-        }
+        } 
+        #endregion
 
+
+        /// <summary>
+        /// 开始监听
+        /// </summary>
         public void Start()
         {
             try
             {
+                #region 初始化Socket
                 m_ListenSocket = new Socket(this.endpoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
                 m_ListenSocket.Ttl = 255;
                 m_ListenSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-                m_ListenSocket.Bind(this.endpoint);
-
-                //Mono 不支持
-                //if (Platform.SupportSocketIOControlByCodeEnum)
+                m_ListenSocket.Bind(this.endpoint); 
+                #endregion
+                
                 {
                     uint IOC_IN = 0x80000000;
                     uint IOC_VENDOR = 0x18000000;
@@ -64,21 +77,15 @@ namespace Spider.Core
             catch (Exception ex)
             {
                 OnError(ex);
-
             }
         }
+
         public event MessageReceived MessageReceived;
         private void eventArgs_Completed(object sender, SocketAsyncEventArgs e)
         {
             if (e.SocketError != SocketError.Success)
             {
-                var errorCode = (int)e.SocketError;
-
-                //The listen socket was closed
-                //if (errorCode == 995 || errorCode == 10004 || errorCode == 10038)
-                //return;
-                //Logger.Fatal($"The listen socket was closed  errorCode:{errorCode}");
-                Logger.Fatal($"errorCode:{errorCode}");
+                Logger.Fatal($"errorCode:{(int)e.SocketError}");
             }
 
             if (e.LastOperation == SocketAsyncOperation.ReceiveFrom)
@@ -106,13 +113,14 @@ namespace Spider.Core
             }
         }
 
-
         private void OnError(Exception ex)
         {
             Logger.Fatal(ex.Message + ex.StackTrace);
-            //throw ex;
         }
 
+        /// <summary>
+        /// 停止监听
+        /// </summary>
         public void Stop()
         {
             if (m_ListenSocket == null)
@@ -126,8 +134,7 @@ namespace Spider.Core
                 m_ReceiveSAE.Completed -= new EventHandler<SocketAsyncEventArgs>(eventArgs_Completed);
                 m_ReceiveSAE.Dispose();
                 m_ReceiveSAE = null;
-
-                //if (!Platform.IsMono)
+                
                 {
                     try
                     {
@@ -149,7 +156,11 @@ namespace Spider.Core
 
         }
 
-
+        /// <summary>
+        /// 发送数据包
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="endpoint"></param>
         public void Send(byte[] buffer, IPEndPoint endpoint)
         {
             try
@@ -157,7 +168,6 @@ namespace Spider.Core
                 if (endpoint.Address != IPAddress.Any)
                 {
                     var len = m_ListenSocket.SendTo(buffer, endpoint);
-                    //Logger.Warn($"Send :{len}  {buffer.Length} {endpoint}");
                 }
                 else
                 {
