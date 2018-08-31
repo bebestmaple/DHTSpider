@@ -39,25 +39,13 @@ namespace Tancoder.Torrent.Dht.Messages
         private static readonly BEncodedString ErrorListKey = "e";
         public static readonly BEncodedString ErrorType = "e";
 
-        public override NodeId Id
-        {
-            get { return new NodeId((BEncodedString)""); }
-        }
-        public BEncodedList ErrorList
-        {
-            get { return (BEncodedList)properties[ErrorListKey]; }
-        }
-		
-		private ErrorCode ErrorCode
-        {
-            get { return ((ErrorCode)((BEncodedNumber)ErrorList[0]).Number); }
-        }
-		
-		private string Message
-        {
-            get { return ((BEncodedString)ErrorList[1]).Text; }
-        }
-		
+        public override NodeId Id => new NodeId("");
+        public BEncodedList ErrorList => (BEncodedList)properties[ErrorListKey];
+
+        private ErrorCode ErrorCode => ((ErrorCode)((BEncodedNumber)ErrorList[0]).Number);
+
+        private string Message => ((BEncodedString)ErrorList[1]).Text;
+
         public ErrorMessage(ErrorCode error, string message)
             : base(ErrorType)
         {

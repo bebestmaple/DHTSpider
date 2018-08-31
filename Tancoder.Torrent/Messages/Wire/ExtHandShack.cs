@@ -18,9 +18,13 @@ namespace Tancoder.Torrent.Messages.Wire
             set
             {
                 if (value)
+                {
                     ((BEncodedDictionary)Parameters[MethodKey])[UtMetadataKey] = new BEncodedNumber(1);
+                }
                 else
+                {
                     ((BEncodedDictionary)Parameters[MethodKey]).Remove(UtMetadataKey);
+                }
             }
         }
         public byte UtMetadata
@@ -46,13 +50,7 @@ namespace Tancoder.Torrent.Messages.Wire
             }
         }
 
-        public bool CanGetMetadate
-        {
-            get
-            {
-                return Parameters.Keys.Contains(MetadataSizeKey) && SupportUtMetadata;
-            }
-        }
+        public bool CanGetMetadate => Parameters.Keys.Contains(MetadataSizeKey) && SupportUtMetadata;
 
         public ExtHandShack()
             : base()

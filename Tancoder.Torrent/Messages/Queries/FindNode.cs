@@ -39,10 +39,7 @@ namespace Tancoder.Torrent.Dht.Messages
         private static BEncodedString QueryName = "find_node";
         private static ResponseCreator responseCreator = delegate (BEncodedDictionary d, QueryMessage m) { return new FindNodeResponse(d, m); };
 
-        public NodeId Target
-        {
-            get { return new NodeId((BEncodedString)Parameters[TargetKey]); }
-        }
+        public NodeId Target => new NodeId((BEncodedString)Parameters[TargetKey]);
 
         public FindNode(NodeId id, NodeId target)
             : base(id, QueryName, responseCreator)

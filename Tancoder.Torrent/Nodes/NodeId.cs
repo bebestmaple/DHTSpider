@@ -41,10 +41,7 @@ namespace Tancoder.Torrent.Dht
         BigInteger value;
         private byte[] bytes;
 
-        public byte[] Bytes
-        {
-            get { return bytes; }
-        }
+        public byte[] Bytes => bytes;
 
         public NodeId(byte[] value)
             : this(new BigInteger(value))
@@ -69,56 +66,49 @@ namespace Tancoder.Torrent.Dht
             this.bytes = value.TextBytes;
         }
 
-        public override bool Equals(object obj)
-        {
-            return Equals(obj as NodeId);
-        }
+        public override bool Equals(object obj) => Equals(obj as NodeId);
 
         public bool Equals(NodeId other)
         {
             if ((object)other == null)
+            {
                 return false;
+            }
 
             return value.Equals(other.value);
         }
 
-        public override int GetHashCode()
-        {
-            return value.GetHashCode();
-        }
+        public override int GetHashCode() => value.GetHashCode();
 
-        public override string ToString()
-        {
-            return value.ToString();
-        }
+        public override string ToString() => value.ToString();
 
-        public int CompareTo(object obj)
-        {
-            return CompareTo(obj as NodeId);
-        }
+        public int CompareTo(object obj) => CompareTo(obj as NodeId);
 
         public int CompareTo(NodeId other)
         {
             if ((object)other == null)
+            {
                 return 1;
+            }
 
             BigInteger.Sign s = value.Compare(other.value);
             if (s == BigInteger.Sign.Zero)
+            {
                 return 0;
+            }
             else if (s == BigInteger.Sign.Positive)
+            {
                 return 1;
-            else return -1;
+            }
+            else
+            {
+                return -1;
+            }
         }
 
-        public NodeId Xor(NodeId right)
-        {
-            return new NodeId(value.Xor(right.value));
-        }
+        public NodeId Xor(NodeId right) => new NodeId(value.Xor(right.value));
 
-        public static implicit operator NodeId(int value)
-        {
-            return new NodeId(new BigInteger((uint)value));
-        }
+        public static implicit operator NodeId(int value) => new NodeId(new BigInteger((uint)value));
 
         public static NodeId operator -(NodeId first)
         {
@@ -183,35 +173,39 @@ namespace Tancoder.Torrent.Dht
         private static void CheckArguments(NodeId first)
         {
             if (first == null)
-                throw new ArgumentNullException("first");
+            {
+                throw new ArgumentNullException(nameof(first));
+            }
         }
 
         private static void CheckArguments(NodeId first, NodeId second)
         {
             if (first == null)
-                throw new ArgumentNullException("first");
+            {
+                throw new ArgumentNullException(nameof(first));
+            }
             if (second == null)
-                throw new ArgumentNullException("second");
+            {
+                throw new ArgumentNullException(nameof(second));
+            }
         }
 
         public static bool operator ==(NodeId first, NodeId second)
         {
-            if ((object)first == null)
-                return (object)second == null;
-            if ((object)second == null)
+            if (first == null)
+            {
+                return second == null;
+            }
+            if (second == null)
+            {
                 return false;
+            }
             return first.value == second.value;
         }
 
-        public static bool operator !=(NodeId first, NodeId second)
-        {
-            return first.value != second.value;
-        }
+        public static bool operator !=(NodeId first, NodeId second) => first.value != second.value;
 
-        public BEncodedString BencodedString()
-        {
-            return new BEncodedString(value.GetBytes());
-        }
+        public BEncodedString BencodedString() => new BEncodedString(value.GetBytes());
 
         public NodeId Pow(uint p)
         {
@@ -223,7 +217,9 @@ namespace Tancoder.Torrent.Dht
         {
             byte[] b = new byte[20];
             lock (random)
+            {
                 random.NextBytes(b);
+            }
             return new NodeId(b);
         }
     }

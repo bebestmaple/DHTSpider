@@ -48,10 +48,7 @@ namespace Tancoder.Torrent.Dht
         DateTime lastSeen;
         BEncodedString token;
 
-        public IPEndPoint EndPoint
-        {
-            get { return endpoint; }
-        }
+        public IPEndPoint EndPoint => endpoint;
 
         public int FailedCount
         {
@@ -59,10 +56,7 @@ namespace Tancoder.Torrent.Dht
             set { failedCount = value; }
         }
 
-        public NodeId Id
-        {
-            get { return id; }
-        }
+        public NodeId Id => id;
 
         public DateTime LastSeen
         {
@@ -78,10 +72,14 @@ namespace Tancoder.Torrent.Dht
             get
             {
                 if (failedCount >= MaxFailures)
+                {
                     return NodeState.Bad;
+                }
 
                 else if (lastSeen == DateTime.MinValue)
+                {
                     return NodeState.Unknown;
+                }
 
                 return (DateTime.UtcNow - lastSeen).TotalMinutes < 15 ? NodeState.Good : NodeState.Questionable;
             }
@@ -114,15 +112,17 @@ namespace Tancoder.Torrent.Dht
 
         public void CompactPort(byte[] buffer, int offset)
         {
-            DhtMessage.Write(buffer, offset, endpoint.Address.GetAddressBytes());
-            DhtMessage.Write(buffer, offset + 4, (ushort)endpoint.Port);
+            Client.Messages.Message.Write(buffer, offset, endpoint.Address.GetAddressBytes());
+            Client.Messages.Message.Write(buffer, offset + 4, (ushort)endpoint.Port);
         }
 
         public static BEncodedString CompactPort(IList<Node> peers)
         {
             byte[] buffer = new byte[peers.Count * 6];
             for (int i = 0; i < peers.Count; i++)
+            {
                 peers[i].CompactPort(buffer, i * 6);
+            }
 
             return new BEncodedString(buffer);
         }
@@ -136,7 +136,7 @@ namespace Tancoder.Torrent.Dht
 
         private void CompactNode(byte[] buffer, int offset)
         {
-            DhtMessage.Write(buffer, offset, id.Bytes);
+            Client.Messages.Message.Write(buffer, offset, id.Bytes);
             CompactPort(buffer, offset + 20);
         }
 
@@ -144,7 +144,9 @@ namespace Tancoder.Torrent.Dht
         {
             byte[] buffer = new byte[nodes.Count * 26];
             for (int i = 0; i < nodes.Count; i++)
+            {
                 nodes[i].CompactNode(buffer, i * 26);
+            }
 
             return new BEncodedString(buffer);
         }
@@ -154,20 +156,19 @@ namespace Tancoder.Torrent.Dht
             byte[] id = new byte[20];
             Buffer.BlockCopy(buffer, offset, id, 0, 20);
             IPAddress address = new IPAddress((uint)BitConverter.ToInt32(buffer, offset + 20));
-            int port = (int)(ushort)IPAddress.NetworkToHostOrder((short)BitConverter.ToUInt16(buffer, offset + 24));
+            int port = (ushort)IPAddress.NetworkToHostOrder((short)BitConverter.ToUInt16(buffer, offset + 24));
             return new Node(new NodeId(id), new IPEndPoint(address, port));
         }
 
         public static IEnumerable<Node> FromCompactNode(byte[] buffer)
         {
             for (int i = 0; (i + 26) <= buffer.Length; i += 26)
+            {
                 yield return FromCompactNode(buffer, i);
+            }
         }
 
-        public static IEnumerable<Node> FromCompactNode(BEncodedString nodes)
-        {
-            return FromCompactNode(nodes.TextBytes);
-        }
+        public static IEnumerable<Node> FromCompactNode(BEncodedString nodes) => FromCompactNode(nodes.TextBytes);
 
         public static IEnumerable<Node> FromCompactNode(BEncodedList nodes)
         {
@@ -175,25 +176,33 @@ namespace Tancoder.Torrent.Dht
 	        {
                 //bad format!
                 if (!(node is BEncodedList))
+                {
                     continue;
+                }
                 
 	            string host = string.Empty;
 	            long port = 0;
 	            foreach (BEncodedValue val in (BEncodedList)node)
 	            {
-	                if(val is BEncodedString)
-	                	host = ((BEncodedString)val).Text;
-	                else if (val is BEncodedNumber)
-	                    port = ((BEncodedNumber)val).Number;
+                    if (val is BEncodedString)
+                    {
+                        host = ((BEncodedString)val).Text;
+                    }
+                    else if (val is BEncodedNumber)
+                    {
+                        port = ((BEncodedNumber)val).Number;
+                    }
 	            }
 	            IPAddress address;
 	            IPAddress.TryParse(host, out address);
-                
+
                 //REM: bad design from bitcomet we do not have node id so create it...
                 //or use torrent infohash?
                 // Will messages from this node be discarded later on if the NodeId doesn't match?
                 if (address != null)
-	            	yield return new Node(NodeId.Create(), new IPEndPoint(address, (int)port));
+                {
+                    yield return new Node(NodeId.Create(), new IPEndPoint(address, (int)port));
+                }
 	        }
         }
 
@@ -201,28 +210,26 @@ namespace Tancoder.Torrent.Dht
         public int CompareTo(Node other)
         {
             if (other == null)
+            {
                 return 1;
+            }
             
             return lastSeen.CompareTo(other.lastSeen);
         }
 
-        public override bool Equals(object obj)
-        {
-            return Equals(obj as Node);
-        }
+        public override bool Equals(object obj) => Equals(obj as Node);
 
         public bool Equals(Node other)
         {
             if (other == null)
+            {
                 return false;
+            }
 
             return id.Equals(other.id);
         }
 
-        public override int GetHashCode()
-        {
-            return id.GetHashCode();
-        }
+        public override int GetHashCode() => id.GetHashCode();
 
         public override string ToString()
         {
@@ -240,7 +247,9 @@ namespace Tancoder.Torrent.Dht
             foreach (Node node in newNodes)
             {
                 if (currentNodes.ContainsValue(node.Id))
+                {
                     continue;
+                }
 
                 NodeId distance = node.Id.Xor(target);
                 if (currentNodes.Count < maxNodes)

@@ -27,11 +27,15 @@ namespace Tancoder.Torrent.Messages.Wire
         public override void Decode(byte[] buffer, int offset, int length)
         {
             if (length != ByteLength - 1)
+            {
                 return;
+            }
 
             string protocol = ReadString(buffer, ref offset, Length);
             if (protocol != Protocol)
+            {
                 return;
+            }
 
             byte[] res = ReadBytes(buffer, ref offset, 8);
             SupportExtend = (res[5] & 0x10) > 0;
@@ -55,7 +59,9 @@ namespace Tancoder.Torrent.Messages.Wire
         public override bool CheackHead(byte[] buffer, int offset)
         {
             if (Length != Protocol.Length)
+            {
                 return false;
+            }
             string protocol = ReadString(buffer, ref offset, Length);
             return protocol == Protocol;
         }

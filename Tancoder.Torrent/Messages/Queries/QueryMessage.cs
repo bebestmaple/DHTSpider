@@ -40,10 +40,7 @@ namespace Tancoder.Torrent.Dht.Messages
         public static readonly BEncodedString QueryType = "q";
         private ResponseCreator responseCreator;
 
-        public override NodeId Id
-        {
-            get { return new NodeId((BEncodedString)Parameters[IdKey]); }
-        }
+        public override NodeId Id => new NodeId((BEncodedString)Parameters[IdKey]);
 
         public ResponseCreator ResponseCreator
         {
@@ -51,10 +48,7 @@ namespace Tancoder.Torrent.Dht.Messages
             private set { responseCreator = value; }
         }
 
-        public BEncodedDictionary Parameters
-        {
-            get { return (BEncodedDictionary)properties[QueryArgumentsKey]; }
-        }
+        public BEncodedDictionary Parameters => (BEncodedDictionary)properties[QueryArgumentsKey];
 
         protected QueryMessage(NodeId id, BEncodedString queryName, ResponseCreator responseCreator)
             : this(id, queryName, new BEncodedDictionary(), responseCreator)

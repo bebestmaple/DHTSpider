@@ -7,10 +7,7 @@ namespace Tancoder.Torrent.Dht
     {
         private Node node;
 
-        public Node Node
-        {
-            get { return node; }
-        }
+        public Node Node => node;
 
         public NodeAddedEventArgs(Node node)
         {

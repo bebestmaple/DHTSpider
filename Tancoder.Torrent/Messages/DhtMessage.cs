@@ -53,7 +53,9 @@ namespace Tancoder.Torrent.Dht.Messages
             {
                 BEncodedValue val;
                 if (properties.TryGetValue(VersionKey, out val))
+                {
                     return (BEncodedString)val;
+                }
                 return EmptyString;
             }
         }
@@ -63,10 +65,7 @@ namespace Tancoder.Torrent.Dht.Messages
             get;
         }
 
-        public BEncodedString MessageType
-        {
-            get { return (BEncodedString)properties[MessageTypeKey]; }
-        }
+        public BEncodedString MessageType => (BEncodedString)properties[MessageTypeKey];
 
         public BEncodedValue TransactionId
         {
@@ -80,7 +79,9 @@ namespace Tancoder.Torrent.Dht.Messages
             properties.Add(TransactionIdKey, null);
             properties.Add(MessageTypeKey, messageType);
             if (UseVersionKey)
+            {
                 properties.Add(VersionKey, DhtVersion);
+            }
         }
 
         protected DhtMessage(BEncodedDictionary dictionary)
@@ -88,20 +89,14 @@ namespace Tancoder.Torrent.Dht.Messages
             properties = dictionary;
         }
 
-        public override int ByteLength
-        {
-            get { return properties.LengthInBytes(); }
-        }
+        public override int ByteLength => properties.LengthInBytes();
 
         public override void Decode(byte[] buffer, int offset, int length)
         {
             properties = BEncodedValue.Decode<BEncodedDictionary>(buffer, offset, length, false);
         }
 
-        public override int Encode(byte[] buffer, int offset)
-        {
-            return properties.Encode(buffer, offset);
-        }
+        public override int Encode(byte[] buffer, int offset) => properties.Encode(buffer, offset);
 
         public virtual void Handle(IDhtEngine engine, Node node)
         {

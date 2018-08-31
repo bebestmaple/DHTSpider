@@ -32,7 +32,9 @@ namespace Tancoder.Torrent.Messages.Wire
                 }
             }
             if (head == 0)
+            {
                 return;
+            }
             base.Decode(buffer, offset, head);
             if (!Legal || !Parameters[MsgTypeKey].Equals(MsgType))
             {

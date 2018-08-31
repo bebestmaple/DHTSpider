@@ -7,14 +7,18 @@ namespace Tancoder.Torrent
         static void DoCheck(object toCheck, string name)
         {
             if (toCheck == null)
+            {
                 throw new ArgumentNullException(name);
+            }
         }
 
         static void IsNullOrEmpty(string toCheck, string name)
         {
             DoCheck(toCheck, name);
             if (toCheck.Length == 0)
+            {
                 throw new ArgumentException("Cannot be empty", name);
+            }
         }
 
         public static void Address(object address)

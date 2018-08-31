@@ -42,11 +42,8 @@ namespace Tancoder.Torrent.Dht.Messages
         
         public static Func<DhtMessage,bool> Hook { get; set; }
 
-        public NodeId InfoHash
-        {
-            get { return new NodeId((BEncodedString)Parameters[InfoHashKey]); }
-        }
-        
+        public NodeId InfoHash => new NodeId((BEncodedString)Parameters[InfoHashKey]);
+
         public GetPeers(NodeId id, NodeId infohash)
             : base(id, QueryName, responseCreator)
         {

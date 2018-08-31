@@ -51,15 +51,21 @@ namespace Tancoder.Torrent.Dht.Messages
             get
             {
                 if (Parameters.ContainsKey(ValuesKey) || !Parameters.ContainsKey(NodesKey))
+                {
                     return null;
+                }
                 return (BEncodedString)Parameters[NodesKey];
             }
             set
             {
                 if (Parameters.ContainsKey(ValuesKey))
+                {
                     throw new InvalidOperationException("Already contains the values key");
+                    }
                 if (!Parameters.ContainsKey(NodesKey))
+                {
                     Parameters.Add(NodesKey, null);
+                }
                 Parameters[NodesKey] = value;
             }
         }
@@ -69,17 +75,25 @@ namespace Tancoder.Torrent.Dht.Messages
             get
             {
                 if (Parameters.ContainsKey(NodesKey) || !Parameters.ContainsKey(ValuesKey))
+                {
                     return null;
+                }
                 return (BEncodedList)Parameters[ValuesKey];
             }
             set
             {
                 if (Parameters.ContainsKey(NodesKey))
+                {
                     throw new InvalidOperationException("Already contains the nodes key");
+                }
                 if (!Parameters.ContainsKey(ValuesKey))
+                {
                     Parameters.Add(ValuesKey, value);
+                }
                 else
+                {
                     Parameters[ValuesKey] = value;
+                }
             }
         }
 
@@ -100,7 +114,9 @@ namespace Tancoder.Torrent.Dht.Messages
             base.Handle(engine, node);
             node.Token = Token;
             if (Nodes != null)
+            {
                 engine.Add(Node.FromCompactNode(Nodes));
+            }
         }
     }
 }

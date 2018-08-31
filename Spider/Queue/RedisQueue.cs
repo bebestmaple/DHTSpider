@@ -8,13 +8,7 @@ namespace Spider.Queue
     public class RedisQueue : IQueue
     {
         private const string RedisQueueKey = "RedisQueueKey";
-
-        public RedisQueue()
-        {
-
-        }
-
-
+        
         public  KeyValuePair<InfoHash, IPEndPoint> Dequeue()
         {
             return RedisHelper.Instance.ListLeftPop<KeyValuePair<InfoHash, IPEndPoint>>(RedisQueueKey);
@@ -33,9 +27,5 @@ namespace Spider.Queue
             return (int)RedisHelper.Instance.ListLength(RedisQueueKey);
         }
         
-
-        
-
-
     }
 }

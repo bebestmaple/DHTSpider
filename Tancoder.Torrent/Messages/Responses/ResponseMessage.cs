@@ -38,19 +38,10 @@ namespace Tancoder.Torrent.Dht.Messages
         public static readonly BEncodedString ResponseType = "r";
         protected QueryMessage queryMessage;
 
-        public override NodeId Id
-        {
-            get { return new NodeId((BEncodedString)Parameters[IdKey]); }
-        }
-        public BEncodedDictionary Parameters
-        {
-            get { return (BEncodedDictionary)properties[ReturnValuesKey]; }
-        }
+        public override NodeId Id => new NodeId((BEncodedString)Parameters[IdKey]);
+        public BEncodedDictionary Parameters => (BEncodedDictionary)properties[ReturnValuesKey];
 
-        public QueryMessage Query
-        {
-            get { return queryMessage; }
-        }
+        public QueryMessage Query => queryMessage;
 
         protected ResponseMessage(NodeId id, BEncodedValue transactionId)
             : base(ResponseType)

@@ -43,9 +43,13 @@ namespace Tancoder.Torrent.Dht.Messages
             get
             {
                 if (Parameters.ContainsKey(NodesKey))
+                {
                     return (BEncodedString)Parameters[NodesKey];
+                }
                 else
+                {
                     return (BEncodedString)Parameters[NodesKey2];
+                }
             }
             set { Parameters[NodesKey] = value; }
         }

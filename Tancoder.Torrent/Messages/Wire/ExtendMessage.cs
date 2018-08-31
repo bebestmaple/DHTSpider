@@ -14,13 +14,7 @@ namespace Tancoder.Torrent.Messages.Wire
             MessageID = ExtendID;
             Parameters = new BEncodedDictionary();
         }
-        public override int ByteLength
-        {
-            get
-            {
-                return Parameters.LengthInBytes() + sizeof(byte) + sizeof(byte) + sizeof(int);
-            }
-        }
+        public override int ByteLength => Parameters.LengthInBytes() + sizeof(byte) + sizeof(byte) + sizeof(int);
         public override void Decode(byte[] buffer, int offset, int length)
         {
             base.Decode(buffer, offset, length);

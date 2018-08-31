@@ -38,10 +38,7 @@ namespace Tancoder.Torrent.BEncoding
         byte[] peeked;
         bool strictDecoding;
 
-        public bool StrictDecoding
-        {
-            get { return strictDecoding; }
-        }
+        public bool StrictDecoding => strictDecoding;
 
         public RawReader(Stream input)
             : this(input, true)
@@ -56,35 +53,25 @@ namespace Tancoder.Torrent.BEncoding
             this.strictDecoding = strictDecoding;
         }
 
-        public override bool CanRead
-        {
-            get { return input.CanRead; }
-        }
+        public override bool CanRead => input.CanRead;
 
-        public override bool CanSeek
-        {
-            get { return input.CanSeek; }
-        }
+        public override bool CanSeek => input.CanSeek;
 
-        public override bool CanWrite
-        {
-            get { return false; }
-        }
+        public override bool CanWrite => false;
 
         public override void Flush()
         {
             throw new NotSupportedException();
         }
 
-        public override long Length
-        {
-            get { return input.Length; }
-        }
+        public override long Length => input.Length;
 
         public int PeekByte()
         {
             if (!hasPeek)
+            {
                 hasPeek = Read(peeked, 0, 1) == 1;
+            }
             return hasPeek ? peeked[0] : -1;
         }
 
@@ -103,7 +90,9 @@ namespace Tancoder.Torrent.BEncoding
             get
             {
                 if (hasPeek)
+                {
                     return input.Position - 1;
+                }
                 return input.Position;
             }
             set
@@ -135,9 +124,13 @@ namespace Tancoder.Torrent.BEncoding
         {
             long val;
             if (hasPeek && origin == SeekOrigin.Current)
+            {
                 val = input.Seek(offset - 1, origin);
+            }
             else
+            {
                 val = input.Seek(offset, origin);
+            }
             hasPeek = false;
             return val;
         }

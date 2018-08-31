@@ -65,6 +65,7 @@
     <Compile Include="Listeners\Listener.cs" />
     <Compile Include="Listeners\UdpListener.cs" />
     <Compile Include="Listeners\WireListener.cs" />
+    <Compile Include="Log.cs" />
     <Compile Include="Messages\DhtMessage.cs" />
     <Compile Include="MessageException.cs" />
     <Compile Include="MessageFactory.cs" />

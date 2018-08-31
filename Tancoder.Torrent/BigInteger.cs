@@ -84,7 +84,7 @@ namespace Tancoder.Torrent.Dht
         public BigInteger()
         {
             data = new uint[DEFAULT_LEN];
-            this.length = DEFAULT_LEN;
+            length = DEFAULT_LEN;
         }
 
         public BigInteger(uint ui)
@@ -101,25 +101,27 @@ namespace Tancoder.Torrent.Dht
 
         public BigInteger(Sign sign, uint len)
         {
-            this.data = new uint[len];
-            this.length = len;
+            data = new uint[len];
+            length = len;
         }
 
         public BigInteger(BigInteger bi)
         {
-            this.data = (uint[])bi.data.Clone();
-            this.length = bi.length;
+            data = (uint[])bi.data.Clone();
+            length = bi.length;
         }
 
         public BigInteger(BigInteger bi, uint len)
         {
 
-            this.data = new uint[len];
+            data = new uint[len];
 
             for (uint i = 0; i < bi.length; i++)
-                this.data[i] = bi.data[i];
+            {
+                data[i] = bi.data[i];
+            }
 
-            this.length = bi.length;
+            length = bi.length;
         }
 
         #endregion
@@ -129,12 +131,17 @@ namespace Tancoder.Torrent.Dht
         public BigInteger(byte[] inData)
         {
             if (inData.Length == 0)
+            {
                 inData = new byte[1];
+            }
             length = (uint)inData.Length >> 2;
             int leftOver = inData.Length & 0x3;
 
             // length not multiples of 4
-            if (leftOver != 0) length++;
+            if (leftOver != 0)
+            {
+                length++;
+            }
 
             data = new uint[length];
 
@@ -155,14 +162,11 @@ namespace Tancoder.Torrent.Dht
                 case 3: data[length - 1] = (uint)((inData[0] << 16) | (inData[1] << 8) | inData[2]); break;
             }
 
-            this.Normalize();
+            Normalize();
         }
 
 
-        public static implicit operator BigInteger(uint value)
-        {
-            return (new BigInteger(value));
-        }
+        public static implicit operator BigInteger(uint value) => (new BigInteger(value));
 
         #endregion
 
@@ -171,20 +175,30 @@ namespace Tancoder.Torrent.Dht
         public static BigInteger operator +(BigInteger bi1, BigInteger bi2)
         {
             if (bi1 == 0)
+            {
                 return new BigInteger(bi2);
+            }
             else if (bi2 == 0)
+            {
                 return new BigInteger(bi1);
+            }
             else
+            {
                 return Kernel.AddSameSign(bi1, bi2);
+            }
         }
 
         public static BigInteger operator -(BigInteger bi1, BigInteger bi2)
         {
             if (bi2 == 0)
+            {
                 return new BigInteger(bi1);
+            }
 
             if (bi1 == 0)
+            {
                 throw new ArithmeticException(WouldReturnNegVal);
+            }
 
             switch (Kernel.Compare(bi1, bi2))
             {
@@ -205,25 +219,25 @@ namespace Tancoder.Torrent.Dht
         public static int operator %(BigInteger bi, int i)
         {
             if (i > 0)
+            {
                 return (int)Kernel.DwordMod(bi, (uint)i);
+            }
             else
+            {
                 return -(int)Kernel.DwordMod(bi, (uint)-i);
+            }
         }
 
-        public static uint operator %(BigInteger bi, uint ui)
-        {
-            return Kernel.DwordMod(bi, (uint)ui);
-        }
+        public static uint operator %(BigInteger bi, uint ui) => Kernel.DwordMod(bi, (uint)ui);
 
-        public static BigInteger operator %(BigInteger bi1, BigInteger bi2)
-        {
-            return Kernel.multiByteDivide(bi1, bi2)[1];
-        }
+        public static BigInteger operator %(BigInteger bi1, BigInteger bi2) => Kernel.multiByteDivide(bi1, bi2)[1];
 
         public static BigInteger operator /(BigInteger bi, int i)
         {
             if (i > 0)
+            {
                 return Kernel.DwordDiv(bi, (uint)i);
+            }
 
             throw new ArithmeticException(WouldReturnNegVal);
         }
@@ -235,13 +249,22 @@ namespace Tancoder.Torrent.Dht
 
         public static BigInteger operator *(BigInteger bi1, BigInteger bi2)
         {
-            if (bi1 == 0 || bi2 == 0) return 0;
+            if (bi1 == 0 || bi2 == 0)
+            {
+                return 0;
+            }
 
             //
             // Validate pointers
             //
-            if (bi1.data.Length < bi1.length) throw new IndexOutOfRangeException("bi1 out of range");
-            if (bi2.data.Length < bi2.length) throw new IndexOutOfRangeException("bi2 out of range");
+            if (bi1.data.Length < bi1.length)
+            {
+                throw new IndexOutOfRangeException("bi1 out of range");
+            }
+            if (bi2.data.Length < bi2.length)
+            {
+                throw new IndexOutOfRangeException("bi2 out of range");
+            }
 
             BigInteger ret = new BigInteger(Sign.Positive, bi1.length + bi2.length);
 
@@ -253,9 +276,18 @@ namespace Tancoder.Torrent.Dht
 
         public static BigInteger operator *(BigInteger bi, int i)
         {
-            if (i < 0) throw new ArithmeticException(WouldReturnNegVal);
-            if (i == 0) return 0;
-            if (i == 1) return new BigInteger(bi);
+            if (i < 0)
+            {
+                throw new ArithmeticException(WouldReturnNegVal);
+            }
+            if (i == 0)
+            {
+                return 0;
+            }
+            if (i == 1)
+            {
+                return new BigInteger(bi);
+            }
 
             return Kernel.MultiplyByDword(bi, (uint)i);
         }

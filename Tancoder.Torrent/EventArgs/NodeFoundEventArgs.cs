@@ -39,11 +39,8 @@ namespace Tancoder.Torrent.Dht
         {
             this.node = node;
         }
-        
-        public Node Node
-        {
-            get { return node; }
-        }
+
+        public Node Node => node;
     }
 }
 #endif

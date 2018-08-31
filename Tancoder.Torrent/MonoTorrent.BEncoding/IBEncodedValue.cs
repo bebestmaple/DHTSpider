@@ -48,7 +48,9 @@ namespace Tancoder.Torrent.BEncoding
         {
             byte[] buffer = new byte[LengthInBytes()];
             if (Encode(buffer, 0) != buffer.Length)
+            {
                 throw new BEncodingException("Error encoding the data");
+            }
 
             return buffer;
         }
@@ -62,12 +64,9 @@ namespace Tancoder.Torrent.BEncoding
         /// <returns></returns>
         public abstract int Encode(byte[] buffer, int offset);
 
-        public static T Clone <T> (T value)
-            where T : BEncodedValue
-        {
-            //Check.Value (value);
-            return (T) BEncodedValue.Decode (value.Encode ());
-        }
+        //Check.Value (value);
+        public static T Clone<T>(T value)
+        where T : BEncodedValue => (T)Decode(value.Encode());
 
         /// <summary>
         /// Interface for all BEncoded values
@@ -77,16 +76,17 @@ namespace Tancoder.Torrent.BEncoding
         public static BEncodedValue Decode(byte[] data)
         {
             if (data == null)
-                throw new ArgumentNullException("data");
+            {
+                throw new ArgumentNullException(nameof(data));
+            }
 
             using (RawReader stream = new RawReader(new MemoryStream(data)))
+            {
                 return (Decode(stream));
+            }
         }
 
-        internal static BEncodedValue Decode(byte[] buffer, bool strictDecoding)
-        {
-            return Decode(buffer, 0, buffer.Length, strictDecoding);
-        }
+        internal static BEncodedValue Decode(byte[] buffer, bool strictDecoding) => Decode(buffer, 0, buffer.Length, strictDecoding);
 
         /// <summary>
         /// Decode BEncoded data in the given byte array
@@ -95,24 +95,29 @@ namespace Tancoder.Torrent.BEncoding
         /// <param name="offset">The offset at which the data starts at</param>
         /// <param name="length">The number of bytes to be decoded</param>
         /// <returns>BEncodedValue containing the data that was in the byte[]</returns>
-        public static BEncodedValue Decode(byte[] buffer, int offset, int length)
-        {
-            return Decode(buffer, offset, length, true);
-        }
+        public static BEncodedValue Decode(byte[] buffer, int offset, int length) => Decode(buffer, offset, length, true);
 
         public static BEncodedValue Decode(byte[] buffer, int offset, int length, bool strictDecoding)
         {
             if (buffer == null)
-                throw new ArgumentNullException("buffer");
+            {
+                throw new ArgumentNullException(nameof(buffer));
+            }
 
             if (offset < 0 || length < 0)
+            {
                 throw new IndexOutOfRangeException("Neither offset or length can be less than zero");
+            }
 
             if (offset > buffer.Length - length)
-                throw new ArgumentOutOfRangeException("length");
+            {
+                throw new ArgumentOutOfRangeException(nameof(length));
+            }
 
             using (RawReader reader = new RawReader(new MemoryStream(buffer, offset, length), strictDecoding))
+            {
                 return (BEncodedValue.Decode(reader));
+            }
         }
 
 
@@ -124,7 +129,9 @@ namespace Tancoder.Torrent.BEncoding
         public static BEncodedValue Decode(Stream stream)
         {
             if (stream == null)
-                throw new ArgumentNullException("stream");
+            {
+                throw new ArgumentNullException(nameof(stream));
+            }
 
             return Decode(new RawReader(stream));
         }
@@ -138,7 +145,9 @@ namespace Tancoder.Torrent.BEncoding
         public static BEncodedValue Decode(RawReader reader)
         {
             if (reader == null)
-                throw new ArgumentNullException("reader");
+            {
+                throw new ArgumentNullException(nameof(reader));
+            }
 
             BEncodedValue data;
             switch (reader.PeekByte())
@@ -182,10 +191,7 @@ namespace Tancoder.Torrent.BEncoding
         /// </summary>
         /// <param name="data">The byte array containing the BEncoded data</param>
         /// <returns></returns>
-        public static T Decode<T>(byte[] data) where T : BEncodedValue
-        {
-            return (T)BEncodedValue.Decode(data);
-        }
+        public static T Decode<T>(byte[] data) where T : BEncodedValue => (T)Decode(data);
 
 
         /// <summary>
@@ -195,15 +201,9 @@ namespace Tancoder.Torrent.BEncoding
         /// <param name="offset">The offset at which the data starts at</param>
         /// <param name="length">The number of bytes to be decoded</param>
         /// <returns>BEncodedValue containing the data that was in the byte[]</returns>
-        public static T Decode<T>(byte[] buffer, int offset, int length) where T : BEncodedValue
-        {
-            return BEncodedValue.Decode<T>(buffer, offset, length, true);
-        }
+        public static T Decode<T>(byte[] buffer, int offset, int length) where T : BEncodedValue => Decode<T>(buffer, offset, length, true);
 
-        public static T Decode<T>(byte[] buffer, int offset, int length, bool strictDecoding) where T : BEncodedValue
-        {
-            return (T)BEncodedValue.Decode(buffer, offset, length, strictDecoding);
-        }
+        public static T Decode<T>(byte[] buffer, int offset, int length, bool strictDecoding) where T : BEncodedValue => (T)Decode(buffer, offset, length, strictDecoding);
 
 
         /// <summary>
@@ -211,16 +211,10 @@ namespace Tancoder.Torrent.BEncoding
         /// </summary>
         /// <param name="stream">The stream containing the BEncoded data</param>
         /// <returns>BEncodedValue containing the data that was in the stream</returns>
-        public static T Decode<T>(Stream stream) where T : BEncodedValue
-        {
-            return (T)BEncodedValue.Decode(stream);
-        }
+        public static T Decode<T>(Stream stream) where T : BEncodedValue => (T)Decode(stream);
 
 
-        public static T Decode<T>(RawReader reader) where T : BEncodedValue
-        {
-            return (T)BEncodedValue.Decode(reader);
-        }
+        public static T Decode<T>(RawReader reader) where T : BEncodedValue => (T)Decode(reader);
 
 
         /// <summary>

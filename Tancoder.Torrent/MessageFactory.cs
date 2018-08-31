@@ -90,7 +90,9 @@ namespace Tancoder.Torrent.Dht.Messages
             string error;
 
             if (!TryDecodeMessage(dictionary, out message, out error))
+            {
                 throw new MessageException(ErrorCode.GenericError, error);
+            }
 
             return message;
         }

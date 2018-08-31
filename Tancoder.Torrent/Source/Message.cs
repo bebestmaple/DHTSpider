@@ -40,7 +40,9 @@ namespace Tancoder.Torrent.Client.Messages
         protected int CheckWritten(int written)
         {
             if (written != ByteLength)
+            {
                 throw new MessageException("Message encoded incorrectly. Incorrect number of bytes written");
+            }
             return written;
         }
 
@@ -55,10 +57,7 @@ namespace Tancoder.Torrent.Client.Messages
 
         public abstract int Encode(byte[] buffer, int offset);
 
-        static public byte ReadByte(byte[] buffer, int offset)
-        {
-            return buffer[offset];
-        }
+        static public byte ReadByte(byte[] buffer, int offset) => buffer[offset];
 
         static public byte ReadByte(byte[] buffer, ref int offset)
         {
@@ -67,10 +66,7 @@ namespace Tancoder.Torrent.Client.Messages
             return b;
         }
 
-        static public byte[] ReadBytes(byte[] buffer, int offset, int count)
-        {
-            return ReadBytes(buffer, ref offset, count);
-        }
+        static public byte[] ReadBytes(byte[] buffer, int offset, int count) => ReadBytes(buffer, ref offset, count);
 
         static public byte[] ReadBytes(byte[] buffer, ref int offset, int count)
         {
@@ -80,10 +76,7 @@ namespace Tancoder.Torrent.Client.Messages
             return result;
         }
 
-        static public short ReadShort(byte[] buffer, int offset)
-        {
-            return ReadShort(buffer, ref offset);
-        }
+        static public short ReadShort(byte[] buffer, int offset) => ReadShort(buffer, ref offset);
 
         static public short ReadShort(byte[] buffer, ref int offset)
         {
@@ -92,10 +85,7 @@ namespace Tancoder.Torrent.Client.Messages
             return ret;
         }
 
-        static public string ReadString(byte[] buffer, int offset, int count)
-        {
-            return ReadString(buffer, ref offset, count);
-        }
+        static public string ReadString(byte[] buffer, int offset, int count) => ReadString(buffer, ref offset, count);
 
         static public string ReadString(byte[] buffer, ref int offset, int count)
         {
@@ -104,10 +94,7 @@ namespace Tancoder.Torrent.Client.Messages
             return s;
         }
 
-        static public int ReadInt(byte[] buffer, int offset)
-        {
-            return ReadInt(buffer, ref offset);
-        }
+        static public int ReadInt(byte[] buffer, int offset) => ReadInt(buffer, ref offset);
 
         static public int ReadInt(byte[] buffer, ref int offset)
         {
@@ -116,10 +103,7 @@ namespace Tancoder.Torrent.Client.Messages
             return ret;
         }
 
-        static public long ReadLong(byte[] buffer, int offset)
-        {
-            return ReadLong(buffer, ref offset);
-        }
+        static public long ReadLong(byte[] buffer, int offset) => ReadLong(buffer, ref offset);
 
         static public long ReadLong(byte[] buffer, ref int offset)
         {
@@ -140,10 +124,7 @@ namespace Tancoder.Torrent.Client.Messages
             return count;
         }
 
-        static public int Write(byte[] buffer, int offset, ushort value)
-        {
-            return Write(buffer, offset, (short)value);
-        }
+        static public int Write(byte[] buffer, int offset, ushort value) => Write(buffer, offset, (short)value);
 
         static public int Write(byte[] buffer, int offset, short value)
         {
@@ -161,10 +142,7 @@ namespace Tancoder.Torrent.Client.Messages
             return 4;
         }
 
-        static public int Write(byte[] buffer, int offset, uint value)
-        {
-            return Write(buffer, offset, (int)value);
-        }
+        static public int Write(byte[] buffer, int offset, uint value) => Write(buffer, offset, (int)value);
 
         static public int Write(byte[] buffer, int offset, long value)
         {
@@ -173,20 +151,16 @@ namespace Tancoder.Torrent.Client.Messages
             return 8;
         }
 
-        static public int Write(byte[] buffer, int offset, ulong value)
-        {
-            return Write(buffer, offset, (long)value);
-        }
+        static public int Write(byte[] buffer, int offset, ulong value) => Write(buffer, offset, (long)value);
 
-        static public int Write(byte[] buffer, int offset, byte[] value)
-        {
-            return Write(buffer, offset, value, 0, value.Length);
-        }
+        static public int Write(byte[] buffer, int offset, byte[] value) => Write(buffer, offset, value, 0, value.Length);
 
         static public int WriteAscii(byte[] buffer, int offset, string text)
         {
             for (int i = 0; i < text.Length; i++)
+            {
                 Write(buffer, offset + i, (byte)text[i]);
+            }
             return text.Length;
         }
     }

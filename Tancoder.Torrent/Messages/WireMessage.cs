@@ -7,10 +7,7 @@ namespace Tancoder.Torrent.Messages
         public int  Length { get; set; }
         public bool Legal { get; protected set; } = false;
         public byte MessageID { get; protected set; } = 0;
-        public virtual int OnMessageLength(byte[] pstrlen)
-        {
-            return Length = ReadInt(pstrlen, 0);
-        }
+        public virtual int OnMessageLength(byte[] pstrlen) => Length = ReadInt(pstrlen, 0);
 
         public abstract bool CheackHead(byte[] buffer, int offset);
 

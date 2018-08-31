@@ -67,14 +67,16 @@ namespace Tancoder.Torrent.BEncoding
         public BEncodedList(IEnumerable<BEncodedValue> list)
         {
             if (list == null)
-                throw new ArgumentNullException("list");
+            {
+                throw new ArgumentNullException(nameof(list));
+            }
  
             this.list = new List<BEncodedValue>(list);
         }
 
         private BEncodedList(List<BEncodedValue> value)
         {
-            this.list = value;
+            list = value;
         }
 
         #endregion
@@ -95,7 +97,9 @@ namespace Tancoder.Torrent.BEncoding
             buffer[offset] = (byte)'l';
             written++;
             for (int i = 0; i < this.list.Count; i++)
-                written += this.list[i].Encode(buffer, offset + written);
+            {
+                written += list[i].Encode(buffer, offset + written);
+            }
             buffer[offset + written] = (byte)'e';
             written++;
             return written;
@@ -108,13 +112,19 @@ namespace Tancoder.Torrent.BEncoding
         internal override void DecodeInternal(RawReader reader)
         {
             if (reader.ReadByte() != 'l')                            // Remove the leading 'l'
+            {
                 throw new BEncodingException("Invalid data found. Aborting");
+            }
 
             while ((reader.PeekByte() != -1) && (reader.PeekByte() != 'e'))
-                list.Add(BEncodedValue.Decode(reader));
+            {
+                list.Add(Decode(reader));
+            }
 
             if (reader.ReadByte() != 'e')                            // Remove the trailing 'e'
+            {
                 throw new BEncodingException("Invalid data found. Aborting");
+            }
         }
         #endregion
 
@@ -129,8 +139,10 @@ namespace Tancoder.Torrent.BEncoding
             int length = 0;
 
             length += 1;   // Lists start with 'l'
-            for (int i=0; i < this.list.Count; i++)
-                length += this.list[i].LengthInBytes();
+            for (int i = 0; i < this.list.Count; i++)
+            {
+                length += list[i].LengthInBytes();
+            }
 
             length += 1;   // Lists end with 'e'
             return length;
@@ -144,11 +156,17 @@ namespace Tancoder.Torrent.BEncoding
             BEncodedList other = obj as BEncodedList;
 
             if (other == null)
+            {
                 return false;
+            }
 
             for (int i = 0; i < this.list.Count; i++)
+            {
                 if (!this.list[i].Equals(other.list[i]))
+                {
                     return false;
+                }
+            }
 
             return true;
         }
@@ -158,23 +176,22 @@ namespace Tancoder.Torrent.BEncoding
         {
             int result = 0;
             for (int i = 0; i < list.Count; i++)
+            {
                 result ^= list[i].GetHashCode();
+            }
 
             return result;
         }
 
 
-        public override string ToString()
-        {
-            return System.Text.Encoding.UTF8.GetString(Encode());
-        }
+        public override string ToString() => System.Text.Encoding.UTF8.GetString(Encode());
         #endregion
 
 
         #region IList methods
         public void Add(BEncodedValue item)
         {
-            this.list.Add(item);
+            list.Add(item);
         }
 
         public void AddRange (IEnumerable<BEncodedValue> collection)
@@ -184,64 +201,43 @@ namespace Tancoder.Torrent.BEncoding
 
         public void Clear()
         {
-            this.list.Clear();
+            list.Clear();
         }
 
-        public bool Contains(BEncodedValue item)
-        {
-            return this.list.Contains(item);
-        }
+        public bool Contains(BEncodedValue item) => this.list.Contains(item);
 
         public void CopyTo(BEncodedValue[] array, int arrayIndex)
         {
-            this.list.CopyTo(array, arrayIndex);
+            list.CopyTo(array, arrayIndex);
         }
 
-        public int Count
-        {
-            get { return this.list.Count; }
-        }
+        public int Count => list.Count;
 
-        public int IndexOf(BEncodedValue item)
-        {
-            return this.list.IndexOf(item);
-        }
+        public int IndexOf(BEncodedValue item) => list.IndexOf(item);
 
         public void Insert(int index, BEncodedValue item)
         {
-            this.list.Insert(index, item);
+            list.Insert(index, item);
         }
 
-        public bool IsReadOnly
-        {
-            get { return false; }
-        }
+        public bool IsReadOnly => false;
 
-        public bool Remove(BEncodedValue item)
-        {
-            return this.list.Remove(item);
-        }
+        public bool Remove(BEncodedValue item) => list.Remove(item);
 
         public void RemoveAt(int index)
         {
-            this.list.RemoveAt(index);
+            list.RemoveAt(index);
         }
 
         public BEncodedValue this[int index]
         {
-            get { return this.list[index]; }
-            set { this.list[index] = value; }
+            get { return list[index]; }
+            set { list[index] = value; }
         }
 
-        public IEnumerator<BEncodedValue> GetEnumerator()
-        {
-            return this.list.GetEnumerator();
-        }
+        public IEnumerator<BEncodedValue> GetEnumerator() => list.GetEnumerator();
 
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
-        {
-            return this.GetEnumerator();
-        }
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
         #endregion
     }
 }

@@ -42,20 +42,11 @@ namespace Tancoder.Torrent.Dht.Messages
         private static BEncodedString TokenKey = "token";
         private static ResponseCreator responseCreator = delegate(BEncodedDictionary d, QueryMessage m) { return new AnnouncePeerResponse(d, m); };
 
-        public NodeId InfoHash
-        {
-            get { return new NodeId((BEncodedString)Parameters[InfoHashKey]); }
-        }
+        public NodeId InfoHash => new NodeId((BEncodedString)Parameters[InfoHashKey]);
 
-        public BEncodedNumber Port
-        {
-            get { return (BEncodedNumber)Parameters[PortKey]; }
-        }
+        public BEncodedNumber Port => (BEncodedNumber)Parameters[PortKey];
 
-        public BEncodedString Token
-        {
-            get { return (BEncodedString)Parameters[TokenKey]; }
-        }
+        public BEncodedString Token => (BEncodedString)Parameters[TokenKey];
 
         public AnnouncePeer(NodeId id, NodeId infoHash, BEncodedNumber port, BEncodedString token)
             : base(id, QueryName, responseCreator)
@@ -74,10 +65,11 @@ namespace Tancoder.Torrent.Dht.Messages
         public override void Handle(IDhtEngine engine, Node node)
         {
             base.Handle(engine, node);
-
+            ConsoleLog.ConsoleWrite("GetAnnounced");
             DhtMessage response;
             if (engine.TokenManager.VerifyToken(node, Token))
 			{
+                ConsoleLog.ConsoleWrite("GetAnnounced VerifyToken");
                 engine.GetAnnounced(new InfoHash(InfoHash.Bytes),
                     new IPEndPoint(node.EndPoint.Address, (int)Port.Number));
 				response = new AnnouncePeerResponse(engine.GetNeighborId(Id), TransactionId);

@@ -53,7 +53,7 @@ namespace Tancoder.Torrent.BEncoding
         /// </summary>
         public BEncodedDictionary()
         {
-            this.dictionary = new SortedDictionary<BEncodedString, BEncodedValue>();
+            dictionary = new SortedDictionary<BEncodedString, BEncodedValue>();
         }
 
         #endregion
@@ -104,36 +104,38 @@ namespace Tancoder.Torrent.BEncoding
             BEncodedString oldkey = null;
 
             if (reader.ReadByte() != 'd')
+            {
                 throw new BEncodingException("Invalid data found. Aborting"); // Remove the leading 'd'
+            }
 
             while ((reader.PeekByte() != -1) && (reader.PeekByte() != 'e'))
             {
                 key = (BEncodedString)BEncodedValue.Decode(reader);         // keys have to be BEncoded strings
 
                 if (oldkey != null && oldkey.CompareTo(key) > 0)
+                {
                     if (strictDecoding)
+                    {
                         throw new BEncodingException(String.Format(
-                            "Illegal BEncodedDictionary. The attributes are not ordered correctly. Old key: {0}, New key: {1}",
-                            oldkey, key));
+                              "Illegal BEncodedDictionary. The attributes are not ordered correctly. Old key: {0}, New key: {1}",
+                              oldkey, key));
+                    }
+                }
 
                 oldkey = key;
-                value = BEncodedValue.Decode(reader);                     // the value is a BEncoded value
+                value = Decode(reader);                     // the value is a BEncoded value
                 dictionary.Add(key, value);
             }
 
             if (reader.ReadByte() != 'e')                                    // remove the trailing 'e'
+            {
                 throw new BEncodingException("Invalid data found. Aborting");
+            }
         }
 
-        public static BEncodedDictionary DecodeTorrent(byte[] bytes)
-        {
-            return DecodeTorrent(new MemoryStream(bytes));
-        }
+        public static BEncodedDictionary DecodeTorrent(byte[] bytes) => DecodeTorrent(new MemoryStream(bytes));
 
-        public static BEncodedDictionary DecodeTorrent(Stream s)
-        {
-            return DecodeTorrent(new RawReader(s));
-        }
+        public static BEncodedDictionary DecodeTorrent(Stream s) => DecodeTorrent(new RawReader(s));
 
 
         /// <summary>
@@ -147,7 +149,9 @@ namespace Tancoder.Torrent.BEncoding
             BEncodedValue value = null;
             BEncodedDictionary torrent = new BEncodedDictionary();
             if (reader.ReadByte() != 'd')
+            {
                 throw new BEncodingException("Invalid data found. Aborting"); // Remove the leading 'd'
+            }
 
             while ((reader.PeekByte() != -1) && (reader.PeekByte() != 'e'))
             {
@@ -157,18 +161,26 @@ namespace Tancoder.Torrent.BEncoding
                 {
                     value = new BEncodedDictionary();
                     if (key.Text.ToLower().Equals("info"))
+                    {
                         ((BEncodedDictionary)value).DecodeInternal(reader, true);
+                    }
                     else
+                    {
                         ((BEncodedDictionary)value).DecodeInternal(reader, false);
+                    }
                 }
                 else
-                    value = BEncodedValue.Decode(reader);                     // the value is a BEncoded value
+                {
+                    value = Decode(reader);                     // the value is a BEncoded value
+                }
                     
                 torrent.dictionary.Add(key, value);
             }
 
             if (reader.ReadByte() != 'e')                                    // remove the trailing 'e'
+            {
                 throw new BEncodingException("Invalid data found. Aborting");
+            }
 
             return torrent;
         }
@@ -205,18 +217,26 @@ namespace Tancoder.Torrent.BEncoding
             BEncodedValue val;
             BEncodedDictionary other = obj as BEncodedDictionary;
             if (other == null)
+            {
                 return false;
+            }
 
-            if (this.dictionary.Count != other.dictionary.Count)
+            if (dictionary.Count != other.dictionary.Count)
+            {
                 return false;
+            }
 
             foreach (KeyValuePair<BEncodedString, BEncodedValue> keypair in this.dictionary)
             {
                 if (!other.TryGetValue(keypair.Key, out val))
+                {
                     return false;
+                }
 
                 if (!keypair.Value.Equals(val))
+                {
                     return false;
+                }
             }
 
             return true;
@@ -234,50 +254,43 @@ namespace Tancoder.Torrent.BEncoding
             return result;
         }
 
-        public override string ToString()
-        {
-            return System.Text.Encoding.UTF8.GetString(Encode());
-        }
+        public override string ToString() => System.Text.Encoding.UTF8.GetString(Encode());
         #endregion
 
 
         #region IDictionary and IList methods
         public void Add(BEncodedString key, BEncodedValue value)
         {
-            this.dictionary.Add(key, value);
+            dictionary.Add(key, value);
         }
 
         public void Add(KeyValuePair<BEncodedString, BEncodedValue> item)
         {
-            this.dictionary.Add(item.Key, item.Value);
+            dictionary.Add(item.Key, item.Value);
         }
         public void Clear()
         {
-            this.dictionary.Clear();
+            dictionary.Clear();
         }
 
         public bool Contains(KeyValuePair<BEncodedString, BEncodedValue> item)
         {
-            if (!this.dictionary.ContainsKey(item.Key))
+            if (!dictionary.ContainsKey(item.Key))
+            {
                 return false;
+            }
 
-            return this.dictionary[item.Key].Equals(item.Value);
+            return dictionary[item.Key].Equals(item.Value);
         }
 
-        public bool ContainsKey(BEncodedString key)
-        {
-            return this.dictionary.ContainsKey(key);
-        }
+        public bool ContainsKey(BEncodedString key) => dictionary.ContainsKey(key);
 
         public void CopyTo(KeyValuePair<BEncodedString, BEncodedValue>[] array, int arrayIndex)
         {
-            this.dictionary.CopyTo(array, arrayIndex);
+            dictionary.CopyTo(array, arrayIndex);
         }
 
-        public int Count
-        {
-            get { return this.dictionary.Count; }
-        }
+        public int Count => this.dictionary.Count;
 
         //public int IndexOf(KeyValuePair<BEncodedString, IBEncodedValue> item)
         //{
@@ -289,35 +302,23 @@ namespace Tancoder.Torrent.BEncoding
         //    this.dictionary.Insert(index, item);
         //}
 
-        public bool IsReadOnly
-        {
-            get { return false; }
-        }
+        public bool IsReadOnly => false;
 
-        public bool Remove(BEncodedString key)
-        {
-            return this.dictionary.Remove(key);
-        }
+        public bool Remove(BEncodedString key) => dictionary.Remove(key);
 
-        public bool Remove(KeyValuePair<BEncodedString, BEncodedValue> item)
-        {
-            return this.dictionary.Remove(item.Key);
-        }
+        public bool Remove(KeyValuePair<BEncodedString, BEncodedValue> item) => dictionary.Remove(item.Key);
 
         //tpublic void RemoveAt(int index)
         //{
         //    this.dictionary.RemoveAt(index);
         //}
 
-        public bool TryGetValue(BEncodedString key, out BEncodedValue value)
-        {
-            return this.dictionary.TryGetValue(key, out value);
-        }
+        public bool TryGetValue(BEncodedString key, out BEncodedValue value) => dictionary.TryGetValue(key, out value);
 
         public BEncodedValue this[BEncodedString key]
         {
-            get { return this.dictionary[key]; }
-            set { this.dictionary[key] = value; }
+            get { return dictionary[key]; }
+            set { dictionary[key] = value; }
         }
 
         //public KeyValuePair<BEncodedString, IBEncodedValue> this[int index]
@@ -326,25 +327,13 @@ namespace Tancoder.Torrent.BEncoding
         //    set { this.dictionary[index] = value; }
         //}
 
-        public ICollection<BEncodedString> Keys
-        {
-            get { return this.dictionary.Keys; }
-        }
+        public ICollection<BEncodedString> Keys => dictionary.Keys;
 
-        public ICollection<BEncodedValue> Values
-        {
-            get { return this.dictionary.Values; }
-        }
+        public ICollection<BEncodedValue> Values => dictionary.Values;
 
-        public IEnumerator<KeyValuePair<BEncodedString, BEncodedValue>> GetEnumerator()
-        {
-            return this.dictionary.GetEnumerator();
-        }
+        public IEnumerator<KeyValuePair<BEncodedString, BEncodedValue>> GetEnumerator() => dictionary.GetEnumerator();
 
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
-        {
-            return this.dictionary.GetEnumerator();
-        }
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => dictionary.GetEnumerator();
         #endregion
     }
 }

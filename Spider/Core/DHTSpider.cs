@@ -3,6 +3,7 @@ using Spider.Queue;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
@@ -26,17 +27,20 @@ namespace Spider.Core
             MessageQueue = new ConcurrentQueue<KeyValuePair<IPEndPoint, byte[]>>();
         }
 
+        #region  初始DHT网络节点
         /// <summary>
         /// 初始DHT网络节点
         /// </summary>
-        private static List<IPEndPoint> BOOTSTRAP_NODES = new List<IPEndPoint>() {
+        private static List<IPEndPoint> BOOTSTRAP_NODES = new List<IPEndPoint>()
+        {
             new IPEndPoint(Dns.GetHostEntry("router.bittorrent.com").AddressList[0], 6881),
             new IPEndPoint(Dns.GetHostEntry("dht.transmissionbt.com").AddressList[0], 6881),
             new IPEndPoint(Dns.GetHostEntry("router.utorrent.com").AddressList[0], 6881),
         };
+        #endregion
 
         /// <summary>
-        /// UDP监听
+        /// UDP监听器
         /// </summary>
         private UdpSocketListener udpSocketListener;
 
@@ -54,12 +58,29 @@ namespace Spider.Core
         /// 同步锁
         /// </summary>
         private object locker = new object();
+
+
+        private List<Task> _TaskList = new List<Task>();
+
+
+        private CancellationTokenSource _CancellationTokenSource;
+
         public IMetaDataFilter Filter { get; set; }
+
         public IQueue Queue { get; set; }
 
+        /// <summary>
+        /// 自身NodeId
+        /// </summary>
         public NodeId LocalId { get; set; }
+
+        /// <summary>
+        /// 本机地址
+        /// </summary>
         public IPEndPoint LocalAddress { get; set; }
+
         public ITokenManager TokenManager { get; private set; }
+
 
         public ConcurrentDictionary<string, Node> KTable;
 
@@ -68,23 +89,19 @@ namespace Spider.Core
 
         #region IDisposable
         private bool disposed = false;
-        public bool Disposed
-        {
-            get
-            {
-                return disposed;
-            }
-        }
+        public bool Disposed => disposed;
         public void Dispose()
         {
             if (disposed)
+            {
                 return;
-        } 
+            }
+        }
         #endregion
 
-        #region 添加节点
+        #region 向KTable添加节点
         /// <summary>
-        /// 添加节点
+        /// 向KTable添加节点
         /// </summary>
         /// <param name="nodes"></param>
         public void Add(BEncodedList nodes)
@@ -93,7 +110,7 @@ namespace Spider.Core
         }
 
         /// <summary>
-        /// 添加节点
+        /// 向KTable添加节点
         /// </summary>
         /// <param name="nodes"></param>
         public void Add(IEnumerable<Node> nodes)
@@ -105,7 +122,7 @@ namespace Spider.Core
         }
 
         /// <summary>
-        /// 添加节点
+        /// 向KTable添加节点
         /// </summary>
         /// <param name="node"></param>
         public void Add(Node node)
@@ -114,16 +131,16 @@ namespace Spider.Core
             {
                 return;
             }
-            if (!KTable.ContainsKey(node.Id.ToString()))
+            if (!KTable.AsParallel().Any(x => x.Key == node.Id.ToString()))
             {
                 KTable.TryAdd(node.Id.ToString(), node);
             }
         }
         #endregion
 
-        #region 查找节点
+        #region 在KTable中查找节点
         /// <summary>
-        /// 查找节点
+        /// 在KTable中查找节点
         /// </summary>
         /// <param name="nid">节点ID</param>
         /// <returns></returns>
@@ -135,9 +152,10 @@ namespace Spider.Core
                 return node;
             }
             return null;
-        } 
+        }
         #endregion
-       
+        
+
         public void GetAnnounced(InfoHash infohash, IPEndPoint endpoint)
         {
             try
@@ -147,15 +165,18 @@ namespace Spider.Core
                     NewMetadata?.Invoke(this, new NewMetadataEventArgs(infohash, endpoint));
                 }
             }
-            catch { }
+            catch
+            {
+
+
+            }
         }
 
         public NodeId GetNeighborId(NodeId target)
         {
             byte[] nid = new byte[target.Bytes.Length];
             Array.Copy(target.Bytes, nid, nid.Length / 2);
-            Array.Copy(LocalId.Bytes, nid.Length / 2,
-                nid, nid.Length / 2, nid.Length / 2);
+            Array.Copy(LocalId.Bytes, nid.Length / 2, nid, nid.Length / 2, nid.Length / 2);
             return new NodeId(nid);
         }
 
@@ -164,8 +185,10 @@ namespace Spider.Core
 
         }
 
+
         public FindPeersResult QueryFindNode(NodeId target)
         {
+
             var result = new FindPeersResult();
             var targetNode = FindNode(target);
             if (targetNode != null)
@@ -189,16 +212,27 @@ namespace Spider.Core
             return result;
         }
 
-        public List<Node> GetClosestFromKTable(NodeId target)
+
+        /// <summary>
+        /// 获得距离目标节点最近的节点列表
+        /// </summary>
+        /// <param name="target"></param>
+        /// <returns></returns>
+		public List<Node> GetClosestFromKTable(NodeId target)
         {
             SortedList<NodeId, Node> sortedNodes = new SortedList<NodeId, Node>(8);
+
+
             foreach (Node n in KTable.Values)
             {
                 NodeId distance = n.Id.Xor(target);
                 if (sortedNodes.Count == 8)
                 {
                     if (distance > sortedNodes.Keys[sortedNodes.Count - 1])//maxdistance
+                    {
                         continue;
+                    }
+
                     //remove last (with the maximum distance)
                     sortedNodes.RemoveAt(sortedNodes.Count - 1);
                 }
@@ -228,44 +262,61 @@ namespace Spider.Core
         }
 
         /// <summary>
-        /// 开始
+        /// 开始爬虫任务
         /// </summary>
         public void Start()
         {
             udpSocketListener.Start();
             udpSocketListener.MessageReceived += OnMessageReceived;
 
-            Task.Run(() =>
+
+            if (_TaskList == null)
+            {
+
+                _TaskList = new List<Task>();
+            }
+
+            _CancellationTokenSource = new CancellationTokenSource();
+
+            _TaskList.Add(Task.Run(() =>
             {
                 while (true)
                 {
-                    if (Queue.Count() <= 0)
+                    if (!_CancellationTokenSource.IsCancellationRequested && Queue.Count() <= 0)
                     {
                         JoinDHTNetwork();
                         MakeNeighbours();
                     }
-                    Thread.Sleep(1000);
                 }
 
-            });
+            }, _CancellationTokenSource.Token));
 
             for (int i = 0; i < 10; i++)
             {
-                Task.Run(() =>
-                {
-                    ProcessMessage();
-                });
-                Thread.Sleep(100);
+                _TaskList.Add(Task.Run(() =>
+                    {
+                        ProcessMessage();
+                    }, _CancellationTokenSource.Token));
             }
 
         }
 
         /// <summary>
-        /// 停止
+        /// 停止爬虫任务
         /// </summary>
         public void Stop()
         {
             udpSocketListener.Stop();
+            _CancellationTokenSource.Cancel();
+
+            _TaskList.AsParallel().ForAll(task =>
+            {
+                while (task.IsCanceled || task.IsCompleted || task.IsFaulted)
+                {
+                    task.Dispose();
+                }
+
+            });
         }
 
         #region 向初始DHT节点发送消息，以将本节点加入DHT网络
@@ -274,22 +325,33 @@ namespace Spider.Core
         /// </summary>
         private void JoinDHTNetwork()
         {
-            foreach (var item in BOOTSTRAP_NODES)
+            BOOTSTRAP_NODES.AsParallel().ForAll(ipEndPoint =>
             {
-                SendFindNodeRequest(item);
-            }
-        } 
+                SendFindNodeRequest(ipEndPoint);
+            });
+        }
         #endregion
-        
+
+
+        /// <summary>
+        /// 向所有节点发送 Find Node 消息
+        /// </summary>
         private void MakeNeighbours()
         {
-            foreach (var item in KTable)
+            KTable.AsParallel().ForAll(item =>
             {
                 SendFindNodeRequest(item.Value.EndPoint, item.Value.Id);
-            }
+            });
+
             KTable.Clear();
         }
 
+
+        /// <summary>
+        /// 发送 Find Node 消息
+        /// </summary>
+        /// <param name="address">IP地址</param>
+        /// <param name="nodeid">节点Id</param>
         private void SendFindNodeRequest(IPEndPoint address, NodeId nodeid = null)
         {
             var nid = nodeid == null ? LocalId : GetNeighborId(nodeid);
@@ -304,8 +366,12 @@ namespace Spider.Core
             }
         }
 
-        
 
+        /// <summary>
+        /// UDP监听器 接收到消息后的处理
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="endpoint"></param>
         private void OnMessageReceived(byte[] buffer, IPEndPoint endpoint)
         {
             try
@@ -322,17 +388,14 @@ namespace Spider.Core
         {
             while (true)
             {
-                if (MessageQueue.Count > 0)
+                if (!_CancellationTokenSource.IsCancellationRequested && MessageQueue.Count > 0)
                 {
+
                     var msg = new KeyValuePair<IPEndPoint, byte[]>();
                     if (MessageQueue.TryDequeue(out msg))
                     {
                         ProcessMessage(msg.Value, msg.Key);
                     }
-                }
-                else
-                {
-                    Thread.Sleep(500);
                 }
             }
         }
@@ -351,7 +414,7 @@ namespace Spider.Core
                     }
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Logger.Fatal($"ProcessMessage {ex}");
             }

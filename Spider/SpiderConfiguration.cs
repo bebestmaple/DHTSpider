@@ -7,6 +7,7 @@ using Spider.Store;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
@@ -127,7 +128,9 @@ namespace Spider
         {
             _builder.RegisterType<MongoDBStore>().As<IStore>().Named<IStore>("Store").SingleInstance();
             return _instance;
-        } 
+        }
+
+
         #endregion
 
         /// <summary>
@@ -137,13 +140,15 @@ namespace Spider
         {
             _CancellationTokenSource.Cancel();
 
-            for (int i = 0; i < _TaskList.Count; i++)
+
+            _TaskList.AsParallel().ForAll(task =>
             {
-                while (_TaskList[i].IsCanceled || _TaskList[i].IsCompleted || _TaskList[i].IsFaulted)
+                while (task.IsCanceled || task.IsCompleted || task.IsFaulted)
                 {
-                    _TaskList[i].Dispose();
+                    task.Dispose();
                 }
-            }
+
+            });
         }
 
         /// <summary>
@@ -158,13 +163,13 @@ namespace Spider
                 this.UseDefaultCache();
                 _cache = _container.ResolveNamed<ICache>("Cache");
             }
-            
+
 
 
             if (_container.IsRegisteredWithName<IQueue>("Queue"))
             {
                 this.UseDefaultQueue();
-               _queue = _container.ResolveNamed<IQueue>("Queue");
+                _queue = _container.ResolveNamed<IQueue>("Queue");
             }
 
 
@@ -182,29 +187,26 @@ namespace Spider
 
             for (var i = 0; i < _option.MaxSpiderThreadCount; i++)
             {
-               _TaskList.Add(Task.Factory.StartNew((obj) =>
-                {
-                    var keyValue = (KeyValuePair<int, int>)obj;
-                    var port = keyValue.Key + keyValue.Value;
-                    WriteLog($"线程：{keyValue.Value + 1} 端口：{port} 已启动监听...");
+                _TaskList.Add(Task.Run(() =>
+                 {
+                     WriteLog($"线程：{i} 端口：{_option.LocalPort} 已启动监听...");
 
-                    if (!_CancellationTokenSource.IsCancellationRequested)
-                    {
-                        var spider = new DHTSpider(new IPEndPoint(IPAddress.Parse("0.0.0.0"), port), _queue);
-                        spider.NewMetadata += DHTSpider_NewMetadata;
-                        spider.Start();
-                    }
-                },new KeyValuePair<int,int>(_option.LocalPort,i),_CancellationTokenSource.Token));
+                     if (!_CancellationTokenSource.IsCancellationRequested)
+                     {
+                         var spider = new DHTSpider(new IPEndPoint(IPAddress.Parse("0.0.0.0"), _option.LocalPort), _queue);
+                         spider.NewMetadata += DHTSpider_NewMetadata;
+                         spider.Start();
+                     }
+                 }, _CancellationTokenSource.Token));
             }
 
             for (var i = 0; i < _option.MaxDownLoadThreadCount; i++)
             {
-               _TaskList.Add( Task.Factory.StartNew((obj) =>
+                _TaskList.Add(Task.Run(() =>
                 {
-                    var id = (int)obj + 1;
-                    WriteLog($"线程[{id}]开始下载");
-                    Download(id);
-                },i,_CancellationTokenSource.Token));
+                    WriteLog($"线程[{i + 1}]开始下载");
+                    Download(i + 1);
+                }, _CancellationTokenSource.Token));
             }
 
 
@@ -244,24 +246,22 @@ namespace Spider
                         {
                             info = _queue?.Dequeue();
                         }
-                        if (!info.HasValue || info.Value.Key == null || info.Value.Value == null)
+                        if (info.HasValue && info.Value.Key != null && info.Value.Value != null)
                         {
-                            Thread.Sleep(500);
-                            continue;
-                        }
-                        var hash = BitConverter.ToString(info.Value.Key.Hash).Replace("-", "");
-                        using (WireClient client = new WireClient(info.Value.Value))
-                        {
-                            var metadata = client.GetMetaData(info.Value.Key);
-                            if (metadata != null)
+                            var hash = BitConverter.ToString(info.Value.Key.Hash).Replace("-", "");
+                            using (WireClient client = new WireClient(info.Value.Value))
                             {
-                                var name = ((BEncodedString)metadata["name"]).Text;
-                                if (_option.IsSaveTorrent)
+                                var metadata = client.GetMetaData(info.Value.Key);
+                                if (metadata != null)
                                 {
-                                    var filepath = $"{_option.TorrentSavePath}\\{hash}.torrent";
-                                    File.WriteAllBytes(filepath, metadata.Encode());
+                                    var name = ((BEncodedString)metadata["name"]).Text;
+                                    if (_option.IsSaveTorrent)
+                                    {
+                                        var filepath = $"{_option.TorrentSavePath}\\{hash}.torrent";
+                                        File.WriteAllBytes(filepath, metadata.Encode());
+                                    }
+                                    Logger.ConsoleWrite($"线程[{threadId}]下载完成   Name:{name} ", ConsoleColor.Yellow);
                                 }
-                                Logger.ConsoleWrite($"线程[{threadId}]下载完成   Name:{name} ", ConsoleColor.Yellow);
                             }
                         }
                     }
@@ -281,6 +281,6 @@ namespace Spider
                 Logger.ConsoleWrite(msg, consoleColor);
             }
         }
-        
+
     }
 }

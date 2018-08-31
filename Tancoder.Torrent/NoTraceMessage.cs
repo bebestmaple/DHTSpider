@@ -10,9 +10,13 @@ namespace Tancoder.Torrent.Dht.Messages
         {
             var nodes = ((BEncodedDictionary)dictionary["r"]).Keys.Contains("nodes");
             if (nodes)
+            {
                 return new FindNodeResponse(dictionary, message);
+            }
             else
+            {
                 return null;
+            }
         }
 
         public NoTraceMessage()

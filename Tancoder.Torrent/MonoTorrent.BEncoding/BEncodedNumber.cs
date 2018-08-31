@@ -62,13 +62,10 @@ namespace Tancoder.Torrent.BEncoding
         /// <param name="initialValue">The inital value of the BEncodedNumber</param>
         public BEncodedNumber(long value)
         {
-            this.number = value;
+            number = value;
         }
 
-        public static implicit operator BEncodedNumber(long value)
-        {
-            return new BEncodedNumber(value);
-        }
+        public static implicit operator BEncodedNumber(long value) => new BEncodedNumber(value);
         #endregion
 
 
@@ -95,20 +92,28 @@ namespace Tancoder.Torrent.BEncoding
             // Reverse the number '12345' to get '54321'
             long reversed = 0;
             for (long i = number; i != 0; i /= 10)
+            {
                 reversed = reversed * 10 + i % 10;
+            }
 
             // Write each digit of the reversed number to the array. We write '1'
             // first, then '2', etc
             for (long i = reversed; i != 0; i /= 10)
+            {
                 buffer[written++] = (byte)(i % 10 + '0');
+            }
 
             if (number == 0)
+            {
                 buffer[written++] = (byte)'0';
+            }
 
             // If the original number ends in one or more zeros, they are lost
             // when we reverse the number. We add them back in here.
             for (long i = number; i % 10 == 0 && number != 0; i /= 10)
+            {
                 buffer[written++] = (byte)'0';
+            }
 
             buffer[written++] = (byte)'e';
             return written - offset;
@@ -123,10 +128,14 @@ namespace Tancoder.Torrent.BEncoding
         {
             int sign = 1;
             if (reader == null)
-                throw new ArgumentNullException("reader");
+            {
+                throw new ArgumentNullException(nameof(reader));
+            }
 
             if (reader.ReadByte() != 'i')              // remove the leading 'i'
+            {
                 throw new BEncodingException("Invalid data found. Aborting.");
+            }
 
             if (reader.PeekByte() == '-')
             {
@@ -137,13 +146,17 @@ namespace Tancoder.Torrent.BEncoding
             int letter;
             while (((letter = reader.PeekByte()) != -1) && letter != 'e')
             {
-                if(letter < '0' || letter > '9')
+                if (letter < '0' || letter > '9')
+                {
                     throw new BEncodingException("Invalid number found.");
+                }
                 number = number * 10 + (letter - '0');
                 reader.ReadByte ();
             }
             if (reader.ReadByte() != 'e')        //remove the trailing 'e'
+            {
                 throw new BEncodingException("Invalid data found. Aborting.");
+            }
 
             number *= sign;
         }
@@ -161,7 +174,9 @@ namespace Tancoder.Torrent.BEncoding
             int count = 2; // account for the 'i' and 'e'
 
             if (number == 0)
+            {
                 return count + 1;
+            }
 
             if (number < 0)
             {
@@ -169,7 +184,9 @@ namespace Tancoder.Torrent.BEncoding
                 count++;
             }
             for (long i = number; i != 0; i /= 10)
+            {
                 count++;
+            }
 
             return count;
         }
@@ -178,7 +195,9 @@ namespace Tancoder.Torrent.BEncoding
         public int CompareTo(object other)
         {
             if (other is BEncodedNumber || other is long || other is int)
+            {
                 return CompareTo((BEncodedNumber)other);
+            }
 
             return -1;
         }
@@ -186,16 +205,15 @@ namespace Tancoder.Torrent.BEncoding
         public int CompareTo(BEncodedNumber other)
         {
             if (other == null)
-                throw new ArgumentNullException("other");
+            {
+                throw new ArgumentNullException(nameof(other));
+            }
 
-            return this.number.CompareTo(other.number);
+            return number.CompareTo(other.number);
         }
 
 
-        public int CompareTo(long other)
-        {
-            return this.number.CompareTo(other);
-        }
+        public int CompareTo(long other) => number.CompareTo(other);
         #endregion
 
 
@@ -209,28 +227,24 @@ namespace Tancoder.Torrent.BEncoding
         {
             BEncodedNumber obj2 = obj as BEncodedNumber;
             if (obj2 == null)
+            {
                 return false;
+            }
 
-            return (this.number == obj2.number);
+            return (number == obj2.number);
         }
 
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
-        public override int GetHashCode()
-        {
-            return this.number.GetHashCode();
-        }
+        public override int GetHashCode() => number.GetHashCode();
 
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
-        public override string ToString()
-        {
-            return (this.number.ToString());
-        }
+        public override string ToString() => number.ToString();
         #endregion
     }
 }
